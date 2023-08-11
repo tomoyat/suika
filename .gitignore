@@ -1,0 +1,5 @@
+main
+main.dSYM
+cmake-build-debug
+cmake-build-debug-docker
+.idea
