@@ -17,7 +17,9 @@ void setupTunDevice() {
 int main() {
     setupTunDevice();
 
-    auto etherDevice = suika::device::EtherDevice(std::string{tun_device}, std::string{tun_device_name});
+    auto etherDevice = suika::device::ether::EtherDevice(
+            std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
+    suika::logger::info(std::format("ether device address : {}", suika::device::ether::addressToString(etherDevice.address)));
     etherDevice.open();
 
     return 0;

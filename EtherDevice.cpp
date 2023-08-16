@@ -5,11 +5,12 @@
 #include <linux/if_tun.h>
 #include <sys/fcntl.h>
 #include <cstring>
+#include <ranges>
 
 #include "util.h"
 #include "logger.h"
 
-namespace suika::device {
+namespace suika::device::ether {
     int EtherDevice::open() {
         fd = ::open(tanDevice.c_str(), O_RDWR);
         if (fd < 0) {
@@ -49,7 +50,10 @@ namespace suika::device {
             throw std::runtime_error(msg);
         }
 
-        // mac addressを取得する
+        return 0;
+    }
+
+    void EtherDevice::fetchMacAddress(std::array<std::uint8_t, ETHER_ADDR_LEN> &addr) {
         int soc;
         ifreq tmpIfr{};
         soc = socket(AF_INET, SOCK_DGRAM, 0);
@@ -59,16 +63,37 @@ namespace suika::device {
             suika::logger::error(msg);
             throw std::runtime_error(msg);
         }
-        strncpy(tmpIfr.ifr_name, tanDeviceName.c_str(), sizeof(tmpIfr.ifr_name)-1);
+        strncpy(tmpIfr.ifr_name, tanDeviceName.c_str(), sizeof(tmpIfr.ifr_name) - 1);
         if (ioctl(soc, SIOCGIFHWADDR, &tmpIfr) == -1) {
             ::close(fd);
             auto msg = std::format("ioctl [SIOCGIFHWADDR]: {}, dev={}", strerror(errno), tanDeviceName);
             suika::logger::error(msg);
             throw std::runtime_error(msg);
         }
-        memcpy(address, tmpIfr.ifr_hwaddr.sa_data, suika::device::ETHER_ADDR_LEN);
-        suika::logger::info(std::format("ether device: mac address={}", address));
+        for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+            addr[i] = static_cast<std::uint8_t>(tmpIfr.ifr_hwaddr.sa_data[i]);
+        }
+        suika::logger::info(std::format("ether device: mac address={}", addressToString(addr)));
         ::close(soc);
-        return 0;
+    }
+
+
+    std::string addressToString(const std::array<std::uint8_t, ETHER_ADDR_LEN> &addr) {
+        return std::format("{:x}:{:x}:{:x}:{:x}:{:x}:{:x}", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    }
+
+    std::array<std::uint8_t, ETHER_ADDR_LEN> stringToAddress(const std::string &str) {
+        auto ar = std::array<std::uint8_t, ETHER_ADDR_LEN>{};
+        int idx = 0;
+        for (auto word : str | std::views::split(':')) {
+            int value;
+            std::from_chars(word.data(), word.data() + word.size(), value, 16);
+            if (idx >= ETHER_ADDR_LEN) {
+                 throw std::runtime_error(std::format("invalid format {}", str));
+            }
+            ar[idx] = static_cast<uint8_t>(value);
+            idx++;
+        }
+        return ar;
     }
 }
