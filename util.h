@@ -12,8 +12,8 @@
 
 namespace suika::util {
 
-    static const unsigned int IRQ_BASE = SIGRTMIN + 1;
-    static const unsigned int ETHER_TAN_IRQ = IRQ_BASE + 1;
+    static const int IRQ_BASE = SIGRTMIN + 1;
+    static const int ETHER_TAN_IRQ = IRQ_BASE + 1;
 
 
     std::string exec(const std::string &cmd);
