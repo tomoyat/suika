@@ -1,6 +1,8 @@
 #include "logger.h"
 #include "util.h"
 #include "EtherDevice.h"
+#include "Interrupt.h"
+#include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
 
@@ -17,10 +19,24 @@ void setupTunDevice() {
 int main() {
     setupTunDevice();
 
-    auto etherDevice = suika::device::ether::EtherDevice(
-            std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
-    suika::logger::info(std::format("ether device address : {}", suika::device::ether::addressToString(etherDevice.address)));
-    etherDevice.open();
+    std::shared_ptr<suika::device::ether::EtherDevice> etherDevicePtr =
+            std::make_shared<suika::device::ether::EtherDevice>(
+                    std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
+    etherDevicePtr->open();
 
+    suika::logger::info(
+            std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
+
+    auto intr = suika::interrupt::Interrupt();
+
+    intr.init();
+    intr.addDevice(etherDevicePtr);
+
+    intr.run();
+    suika::logger::info("wait 10 sec ");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(60000 * 3));
+
+    intr.shutdown();
     return 0;
 }
