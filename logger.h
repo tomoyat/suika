@@ -6,10 +6,13 @@
 #include <string>
 #include <chrono>
 #include <format>
+#include <mutex>
 
 namespace suika::logger {
 
     constexpr std::string_view timezone{"Asia/Tokyo"};
+
+    static std::mutex loggerMutex;
 
     enum class level : char {
         Debug = 'D',

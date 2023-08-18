@@ -16,6 +16,7 @@ namespace suika::logger {
         auto formatTime = std::format("{:%F %T %Z}", zonedTime);
         auto functionInfo = std::format("{}({}) `{}`",
                                         location.file_name(), location.line(), location.function_name());
+        std::lock_guard<std::mutex> lock(loggerMutex);
         std::clog
                 << std::format("[{}] {} | {} | {}",
                                static_cast<char>(level), formatTime, functionInfo, message)
