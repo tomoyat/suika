@@ -49,8 +49,19 @@ namespace suika::device::ether {
             suika::logger::error(msg);
             throw std::runtime_error(msg);
         }
-
         return 0;
+    }
+
+    int EtherDevice::handler() {
+        return 0;
+    }
+
+    int EtherDevice::getIrq() {
+        return suika::util::ETHER_TAN_IRQ;
+    }
+
+    std::string EtherDevice::getInfo() {
+        return std::format("EtherDevice: address = {}", addressToString(address));
     }
 
     void EtherDevice::fetchMacAddress(std::array<std::uint8_t, ETHER_ADDR_LEN> &addr) {
@@ -85,11 +96,11 @@ namespace suika::device::ether {
     std::array<std::uint8_t, ETHER_ADDR_LEN> stringToAddress(const std::string &str) {
         auto ar = std::array<std::uint8_t, ETHER_ADDR_LEN>{};
         int idx = 0;
-        for (auto word : str | std::views::split(':')) {
+        for (auto word: str | std::views::split(':')) {
             int value;
             std::from_chars(word.data(), word.data() + word.size(), value, 16);
             if (idx >= ETHER_ADDR_LEN) {
-                 throw std::runtime_error(std::format("invalid format {}", str));
+                throw std::runtime_error(std::format("invalid format {}", str));
             }
             ar[idx] = static_cast<uint8_t>(value);
             idx++;

@@ -7,6 +7,16 @@
 #include <cstdint>
 #include <array>
 
+namespace suika::device {
+    struct Device {
+        virtual int open() = 0;
+        virtual int handler() = 0;
+        virtual int getIrq() = 0;
+        virtual std::string getInfo() = 0;
+        virtual ~Device() {};
+    };
+}
+
 namespace suika::device::ether {
     static constexpr int ETHER_ADDR_LEN = 6;
 
@@ -14,8 +24,9 @@ namespace suika::device::ether {
 
     std::array<std::uint8_t, ETHER_ADDR_LEN> stringToAddress(const std::string &str);
 
-    struct EtherDevice {
+    struct EtherDevice : suika::device::Device {
         int fd{};
+        int irq;
         ifreq ifr{};
         std::string tanDevice;
         std::string tanDeviceName;
@@ -27,7 +38,10 @@ namespace suika::device::ether {
             address = stringToAddress(address_);
         }
 
-        int open();
+        int open() override;
+        int handler() override;
+        int getIrq() override;
+        std::string getInfo() override;
 
     private:
         void fetchMacAddress(std::array<std::uint8_t, ETHER_ADDR_LEN> &addr);
