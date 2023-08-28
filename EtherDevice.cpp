@@ -60,14 +60,14 @@ namespace suika::device::ether {
         // signalが抜けるかもしれないので、poolとかで読めるだけ読むのが良い
         int numOfRead = read(fd, buffer, 1514);
 
-        std::array<std::uint8_t, ETHER_ADDR_LEN> srcAddr;
-        std::array<std::uint8_t, ETHER_ADDR_LEN> dstAddr;
+        std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> srcAddr;
+        std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> dstAddr;
 
-        for (int i = 0, cnt = 0; i < numOfRead && cnt < ETHER_ADDR_LEN; i++, cnt++) {
+        for (int i = 0, cnt = 0; i < numOfRead && cnt < suika::ether::ETHER_ADDR_LEN; i++, cnt++) {
             dstAddr[cnt] = static_cast<std::uint8_t>(buffer[i]);
         }
 
-        for (int i = 6, cnt = 0; i < numOfRead && cnt < ETHER_ADDR_LEN; i++, cnt++) {
+        for (int i = 6, cnt = 0; i < numOfRead && cnt < suika::ether::ETHER_ADDR_LEN; i++, cnt++) {
             srcAddr[cnt] = static_cast<std::uint8_t>(buffer[i]);
         }
 
@@ -107,7 +107,7 @@ namespace suika::device::ether {
         return std::format("EtherDevice: address = {}", addressToString(address));
     }
 
-    void EtherDevice::fetchMacAddress(std::array<std::uint8_t, ETHER_ADDR_LEN> &addr) {
+    void EtherDevice::fetchMacAddress(std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr) {
         int soc;
         ifreq tmpIfr{};
         soc = socket(AF_INET, SOCK_DGRAM, 0);
@@ -124,7 +124,7 @@ namespace suika::device::ether {
             suika::logger::error(msg);
             throw std::runtime_error(msg);
         }
-        for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+        for (int i = 0; i < suika::ether::ETHER_ADDR_LEN; i++) {
             addr[i] = static_cast<std::uint8_t>(tmpIfr.ifr_hwaddr.sa_data[i]);
         }
         suika::logger::info(std::format("ether device: mac address={}", addressToString(addr)));
@@ -132,18 +132,18 @@ namespace suika::device::ether {
     }
 
 
-    std::string addressToString(const std::array<std::uint8_t, ETHER_ADDR_LEN> &addr) {
+    std::string addressToString(const std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr) {
         return std::format("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", addr[0], addr[1], addr[2], addr[3], addr[4],
                            addr[5]);
     }
 
-    std::array<std::uint8_t, ETHER_ADDR_LEN> stringToAddress(const std::string &str) {
-        auto ar = std::array<std::uint8_t, ETHER_ADDR_LEN>{};
+    std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> stringToAddress(const std::string &str) {
+        auto ar = std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN>{};
         int idx = 0;
         for (auto word: str | std::views::split(':')) {
             int value;
             std::from_chars(word.data(), word.data() + word.size(), value, 16);
-            if (idx >= ETHER_ADDR_LEN) {
+            if (idx >= suika::ether::ETHER_ADDR_LEN) {
                 throw std::runtime_error(std::format("invalid format {}", str));
             }
             ar[idx] = static_cast<uint8_t>(value);

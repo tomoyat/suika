@@ -21,12 +21,18 @@ namespace suika::device {
     };
 };
 
-namespace suika::device::ether {
+namespace suika::ether {
     static constexpr int ETHER_ADDR_LEN = 6;
+        static constexpr int IP_ADDR_LEN = 4;
+    // https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
+    static constexpr int ETHER_TYPE_IP = 0x0800;
+    static constexpr int ETHER_TYPE_ARP = 0x0806;
+}
 
-    std::string addressToString(const std::array<std::uint8_t, ETHER_ADDR_LEN> &addr);
+namespace suika::device::ether {
+    std::string addressToString(const std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr);
 
-    std::array<std::uint8_t, ETHER_ADDR_LEN> stringToAddress(const std::string &str);
+    std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> stringToAddress(const std::string &str);
 
     struct EtherDevice : suika::device::Device {
         int fd{};
@@ -34,7 +40,7 @@ namespace suika::device::ether {
         ifreq ifr{};
         std::string tanDevice;
         std::string tanDeviceName;
-        std::array<std::uint8_t, ETHER_ADDR_LEN> address{};
+        std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> address{};
 
         EtherDevice(std::string tanDevice_, std::string tanDeviceName_,
                     const std::string &address_) :
@@ -50,7 +56,7 @@ namespace suika::device::ether {
 
         std::string getInfo() override;
 
-        void fetchMacAddress(std::array<std::uint8_t, ETHER_ADDR_LEN> &addr);
+        void fetchMacAddress(std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr);
     };
 };
 

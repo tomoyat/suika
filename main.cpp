@@ -37,7 +37,7 @@ int main() {
                     std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
     etherDevicePtr->open();
 
-    std::array<std::uint8_t, suika::device::ether::ETHER_ADDR_LEN> address{};
+    std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> address{};
     etherDevicePtr->fetchMacAddress(address);
 
     suika::logger::info(
