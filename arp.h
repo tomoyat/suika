@@ -12,8 +12,6 @@
 namespace suika::protocol::arp {
 
     struct ArpProtocolHandler : suika::protocol::ProtocolHandler {
-        ArpProtocolHandler();
-
         int handle(std::shared_ptr<suika::protocol::ProtocolData> protocolDataPtr) override;
     };
 

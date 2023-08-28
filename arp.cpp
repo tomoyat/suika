@@ -38,6 +38,4 @@ namespace suika::protocol::arp {
 
         return 0;
     }
-
-    ArpProtocolHandler::ArpProtocolHandler() = default;
 }
