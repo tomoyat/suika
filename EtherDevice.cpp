@@ -9,6 +9,7 @@
 
 #include "util.h"
 #include "logger.h"
+#include "protocol.h"
 
 namespace suika::device::ether {
     int EtherDevice::open() {
@@ -52,7 +53,49 @@ namespace suika::device::ether {
         return 0;
     }
 
-    int EtherDevice::handler() {
+    int EtherDevice::handler(pthread_t pthread) {
+        char buffer[1514];
+        // https://www.gabriel.urdhr.fr/2021/05/08/tuntap/
+        // readは1frameだけを取れるらしい？
+        // signalが抜けるかもしれないので、poolとかで読めるだけ読むのが良い
+        int numOfRead = read(fd, buffer, 1514);
+
+        std::array<std::uint8_t, ETHER_ADDR_LEN> srcAddr;
+        std::array<std::uint8_t, ETHER_ADDR_LEN> dstAddr;
+
+        for (int i = 0, cnt = 0; i < numOfRead && cnt < ETHER_ADDR_LEN; i++, cnt++) {
+            dstAddr[cnt] = static_cast<std::uint8_t>(buffer[i]);
+        }
+
+        for (int i = 6, cnt = 0; i < numOfRead && cnt < ETHER_ADDR_LEN; i++, cnt++) {
+            srcAddr[cnt] = static_cast<std::uint8_t>(buffer[i]);
+        }
+
+        // protocol type: https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml
+        std::uint16_t etherType = 0;
+        etherType = static_cast<std::uint8_t>(buffer[12]);
+        etherType = etherType << 8;
+        etherType = etherType | static_cast<std::uint8_t>(buffer[13]);
+
+        std::vector<std::byte> data{};
+        data.reserve(numOfRead);
+        for (int i = 14; i < numOfRead; i++) {
+            data.push_back(static_cast<std::byte>(buffer[i]));
+        }
+
+        std::lock_guard<std::mutex> lock(suika::protocol::protocolQueuesMutex);
+        if (suika::protocol::protocolQueues.find(etherType) == suika::protocol::protocolQueues.end()) {
+            suika::logger::warn(std::format("ether deivce protocol queues not found address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
+            return 0;
+        }
+        suika::protocol::protocolQueues[etherType].push(
+                std::make_shared<suika::protocol::ProtocolData>(suika::protocol::ProtocolData{etherType, data})
+        );
+
+        suika::logger::debug(
+                std::format("ether frame: src={}, dst={}, type={:04x}", addressToString(srcAddr),addressToString(dstAddr), etherType));
+
+        pthread_kill(pthread, SIGUSR1);
         return 0;
     }
 
@@ -90,7 +133,8 @@ namespace suika::device::ether {
 
 
     std::string addressToString(const std::array<std::uint8_t, ETHER_ADDR_LEN> &addr) {
-        return std::format("{:x}:{:x}:{:x}:{:x}:{:x}:{:x}", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+        return std::format("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", addr[0], addr[1], addr[2], addr[3], addr[4],
+                           addr[5]);
     }
 
     std::array<std::uint8_t, ETHER_ADDR_LEN> stringToAddress(const std::string &str) {

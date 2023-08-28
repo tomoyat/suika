@@ -10,12 +10,16 @@
 namespace suika::device {
     struct Device {
         virtual int open() = 0;
-        virtual int handler() = 0;
+
+        virtual int handler(pthread_t) = 0;
+
         virtual int getIrq() = 0;
+
         virtual std::string getInfo() = 0;
-        virtual ~Device() {};
+
+        virtual ~Device() = default;
     };
-}
+};
 
 namespace suika::device::ether {
     static constexpr int ETHER_ADDR_LEN = 6;
@@ -26,7 +30,7 @@ namespace suika::device::ether {
 
     struct EtherDevice : suika::device::Device {
         int fd{};
-        int irq;
+        int irq{};
         ifreq ifr{};
         std::string tanDevice;
         std::string tanDeviceName;
@@ -39,13 +43,15 @@ namespace suika::device::ether {
         }
 
         int open() override;
-        int handler() override;
+
+        int handler(pthread_t) override;
+
         int getIrq() override;
+
         std::string getInfo() override;
 
-    private:
         void fetchMacAddress(std::array<std::uint8_t, ETHER_ADDR_LEN> &addr);
     };
-}
+};
 
 #endif //SUIKA_ETHERDEVICE_H

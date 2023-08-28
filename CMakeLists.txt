@@ -11,4 +11,7 @@ add_executable(suika main.cpp
         EtherDevice.cpp
         logger.cpp
         util.cpp
-        Interrupt.h)
+        Interrupt.h
+        protocol.h
+        arp.h
+        arp.cpp)

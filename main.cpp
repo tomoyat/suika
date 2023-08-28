@@ -2,6 +2,7 @@
 #include "util.h"
 #include "EtherDevice.h"
 #include "Interrupt.h"
+#include "arp.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -16,13 +17,28 @@ void setupTunDevice() {
     suika::util::exec(std::format("ip link set {} up", tun_device_name));
 };
 
+void protocolQueueInit() {
+    suika::protocol::protocolQueues.insert(
+            std::make_pair(suika::protocol::arpType,
+                           std::queue<std::shared_ptr<suika::protocol::ProtocolData>>())
+    );
+    suika::logger::info(std::format("main protocol queues address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
+
+    suika::protocol::protocolHandlers[suika::protocol::arpType] = std::make_shared<suika::protocol::arp::ArpProtocolHandler>();
+};
+
 int main() {
     setupTunDevice();
+
+    protocolQueueInit();
 
     std::shared_ptr<suika::device::ether::EtherDevice> etherDevicePtr =
             std::make_shared<suika::device::ether::EtherDevice>(
                     std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
     etherDevicePtr->open();
+
+    std::array<std::uint8_t, suika::device::ether::ETHER_ADDR_LEN> address{};
+    etherDevicePtr->fetchMacAddress(address);
 
     suika::logger::info(
             std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
