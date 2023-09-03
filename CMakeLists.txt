@@ -12,7 +12,7 @@ add_executable(suika main.cpp
         Logger.cpp
         Util.cpp
         Interrupt.h
-        protocol.h
+        Protocol.h
         Arp.h
         Arp.cpp
         NetworkInterface.h

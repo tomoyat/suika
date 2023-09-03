@@ -7,7 +7,7 @@
 #include <string>
 #include <format>
 
-#include "protocol.h"
+#include "Protocol.h"
 
 namespace suika::protocol::arp {
     constexpr int ARP_HARDWARE_TYPE_ETHER = 0x0001;

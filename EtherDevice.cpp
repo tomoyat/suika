@@ -9,7 +9,7 @@
 
 #include "Util.h"
 #include "Logger.h"
-#include "protocol.h"
+#include "Protocol.h"
 
 namespace suika::device::ether {
     int EtherDevice::open() {

@@ -8,7 +8,7 @@
 #include <vector>
 #include "Logger.h"
 #include "EtherDevice.h"
-#include "protocol.h"
+#include "Protocol.h"
 
 namespace suika::interrupt {
 
