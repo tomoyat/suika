@@ -13,9 +13,9 @@ namespace suika::logger {
              const std::source_location location = std::source_location::current()) {
 
         std::chrono::zoned_time zonedTime{timezone, std::chrono::system_clock::now()};
-        auto formatTime = std::format("{:%F %T %Z}", zonedTime);
-        auto functionInfo = std::format("{}({}) `{}`",
-                                        location.file_name(), location.line(), location.function_name());
+        auto formatTime = std::format("{:%T}", zonedTime);
+        auto functionInfo = std::format("{}({})",
+                                        location.file_name(), location.line());
         std::lock_guard<std::mutex> lock(loggerMutex);
         std::clog
                 << std::format("[{}] {} | {} | {}",
