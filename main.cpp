@@ -1,8 +1,8 @@
-#include "logger.h"
-#include "util.h"
+#include "Logger.h"
+#include "Util.h"
 #include "EtherDevice.h"
 #include "Interrupt.h"
-#include "arp.h"
+#include "Arp.h"
 #include "IpNetworkInterface.h"
 #include <chrono>
 

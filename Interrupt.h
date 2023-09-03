@@ -6,7 +6,7 @@
 #include <thread>
 #include <cstring>
 #include <vector>
-#include "logger.h"
+#include "Logger.h"
 #include "EtherDevice.h"
 #include "protocol.h"
 

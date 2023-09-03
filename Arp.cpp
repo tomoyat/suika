@@ -1,5 +1,5 @@
-#include "arp.h"
-#include "logger.h"
+#include "Arp.h"
+#include "Logger.h"
 #include "EtherDevice.h"
 #include "IpNetworkInterface.h"
 

@@ -2,7 +2,7 @@
 #include <fstream>
 #include <memory>
 #include <cstdio>
-#include "logger.h"
+#include "Logger.h"
 
 namespace suika::util {
     std::string exec(const std::string &cmd) {

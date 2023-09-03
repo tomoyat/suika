@@ -4,17 +4,17 @@ project(suika)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(suika main.cpp
-        logger.h
-        util.h
-        util.h
+        Logger.h
+        Util.h
+        Util.h
         EtherDevice.h
         EtherDevice.cpp
-        logger.cpp
-        util.cpp
+        Logger.cpp
+        Util.cpp
         Interrupt.h
         protocol.h
-        arp.h
-        arp.cpp
+        Arp.h
+        Arp.cpp
         NetworkInterface.h
         IpNetworkInterface.h
         IpNetworkInterface.cpp)

@@ -8,7 +8,7 @@
 #include <memory>
 #include <cstdio>
 #include <csignal>
-#include "logger.h"
+#include "Logger.h"
 
 namespace suika::util {
 

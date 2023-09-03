@@ -7,8 +7,8 @@
 #include <cstring>
 #include <ranges>
 
-#include "util.h"
-#include "logger.h"
+#include "Util.h"
+#include "Logger.h"
 #include "protocol.h"
 
 namespace suika::device::ether {
