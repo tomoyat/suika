@@ -55,9 +55,9 @@ int main() {
     intr.addDevice(etherDevicePtr);
 
     intr.run();
-    suika::logger::info("wait 10 sec ");
+    suika::logger::info("wait 60 sec ");
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(60000 * 3));
+    std::this_thread::sleep_for(std::chrono::milliseconds(60000));
 
     intr.shutdown();
     return 0;
