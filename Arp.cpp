@@ -53,7 +53,15 @@ namespace suika::protocol::arp {
         auto targetInterface = protocolData->devicePtr->getTargetInterface(suika::network::INTERFACE_FAMILY_IP);
 
         if (auto ipInterface = dynamic_pointer_cast<suika::network::IpNetworkInterface>(targetInterface)) {
-
+            /***
+             * TODO
+             * 自身のinterfaceのアドレスとarpのtargetのアドレスを比較
+             * arp cacheを更新
+             * arp requestだったらreplyする
+             * 返信用のデータを作って、
+             * interfaceに紐づけられたdeviceのtransmitをよぶ
+             *
+             */
         } else {
             throw std::runtime_error("cast error");
         }
