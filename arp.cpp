@@ -1,5 +1,7 @@
 #include "arp.h"
 #include "logger.h"
+#include "EtherDevice.h"
+#include "IpNetworkInterface.h"
 
 namespace suika::protocol::arp {
     std::string maxAddressToString(const std::vector<uint8_t> &addr) {
@@ -36,6 +38,25 @@ namespace suika::protocol::arp {
                                          suika::protocol::arp::maxAddressToString(arpData.targetHardwareAddress()),
                                          suika::protocol::arp::ipV4ToString(arpData.targetProtocolAddress())));
 
+        if (arpData.protocolAddressLength() != suika::ether::IP_ADDR_LEN ||
+            arpData.protocolType() != suika::ether::ETHER_TYPE_IP) {
+            suika::logger::error(std::format("unsupported protocol type = {}", arpData.protocolType()));
+            throw std::runtime_error("not support protocol");
+        }
+
+        if (arpData.protocolAddressLength() != suika::ether::IP_ADDR_LEN ||
+            arpData.protocolType() != suika::ether::ETHER_TYPE_IP) {
+            suika::logger::error(std::format("unsupported protocol type = {}", arpData.protocolType()));
+            throw std::runtime_error("not support protocol");
+        }
+
+        auto targetInterface = protocolData->devicePtr->getTargetInterface(suika::network::INTERFACE_FAMILY_IP);
+
+        if (auto ipInterface = dynamic_pointer_cast<suika::network::IpNetworkInterface>(targetInterface)) {
+
+        } else {
+            throw std::runtime_error("cast error");
+        }
         return 0;
     }
 }

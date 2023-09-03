@@ -3,6 +3,7 @@
 #include "EtherDevice.h"
 #include "Interrupt.h"
 #include "arp.h"
+#include "IpNetworkInterface.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -39,6 +40,11 @@ int main() {
 
     std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> address{};
     etherDevicePtr->fetchMacAddress(address);
+    etherDevicePtr->setSelfPtr(etherDevicePtr);
+
+    auto ipInterfacePtr = std::make_shared<suika::network::IpNetworkInterface>(suika::network::INTERFACE_FAMILY_IP);
+    ipInterfacePtr->registerDevice(etherDevicePtr);
+    etherDevicePtr->addNetworkInterface(ipInterfacePtr);
 
     suika::logger::info(
             std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));

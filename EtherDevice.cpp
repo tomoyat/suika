@@ -85,15 +85,19 @@ namespace suika::device::ether {
 
         std::lock_guard<std::mutex> lock(suika::protocol::protocolQueuesMutex);
         if (suika::protocol::protocolQueues.find(etherType) == suika::protocol::protocolQueues.end()) {
-            suika::logger::warn(std::format("ether deivce protocol queues not found address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
+            suika::logger::warn(std::format("ether deivce protocol queues not found address = {}",
+                                            static_cast<void *>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
             return 0;
         }
         suika::protocol::protocolQueues[etherType].push(
-                std::make_shared<suika::protocol::ProtocolData>(suika::protocol::ProtocolData{etherType, data})
+                std::make_shared<suika::protocol::ProtocolData>(
+                        suika::protocol::ProtocolData{etherType, data, getSelfPtr()}
+                )
         );
 
         suika::logger::debug(
-                std::format("ether frame: src={}, dst={}, type={:04x}", addressToString(srcAddr),addressToString(dstAddr), etherType));
+                std::format("ether frame: src={}, dst={}, type={:04x}", addressToString(srcAddr),
+                            addressToString(dstAddr), etherType));
 
         pthread_kill(pthread, SIGUSR1);
         return 0;
@@ -131,6 +135,19 @@ namespace suika::device::ether {
         ::close(soc);
     }
 
+    int EtherDevice::addNetworkInterface(std::shared_ptr<suika::network::NetworkInterface> interfacePtr) {
+        // TODO check type
+        networkInterfaces.push_back(interfacePtr);
+        return 0;
+    }
+
+    std::shared_ptr<suika::device::Device> EtherDevice::getSelfPtr() {
+        return selfPtr;
+    }
+
+    void EtherDevice::setSelfPtr(std::shared_ptr<suika::device::Device> selfPtr_) {
+        selfPtr = selfPtr_;
+    }
 
     std::string addressToString(const std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr) {
         return std::format("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", addr[0], addr[1], addr[2], addr[3], addr[4],

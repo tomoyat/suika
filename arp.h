@@ -10,6 +10,7 @@
 #include "protocol.h"
 
 namespace suika::protocol::arp {
+    constexpr int ARP_HARDWARE_TYPE_ETHER = 0x0001;
 
     struct ArpProtocolHandler : suika::protocol::ProtocolHandler {
         int handle(std::shared_ptr<suika::protocol::ProtocolData> protocolDataPtr) override;

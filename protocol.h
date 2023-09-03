@@ -6,11 +6,14 @@
 #include <memory>
 #include <cstdint>
 
+#include "EtherDevice.h"
+
 namespace suika::protocol {
     static std::uint16_t arpType = 0x0806;
     struct ProtocolData {
         std::uint16_t type;
         std::vector<std::byte> data;
+        std::shared_ptr<suika::device::Device> devicePtr;
     };
     inline std::map<std::uint16_t, std::queue<std::shared_ptr<ProtocolData> > > protocolQueues{};
     static std::mutex protocolQueuesMutex;
