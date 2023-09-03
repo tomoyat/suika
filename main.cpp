@@ -23,7 +23,8 @@ void protocolQueueInit() {
             std::make_pair(suika::protocol::arpType,
                            std::queue<std::shared_ptr<suika::protocol::ProtocolData>>())
     );
-    suika::logger::info(std::format("main protocol queues address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
+    suika::logger::info(std::format("main protocol queues address = {}",
+                                    static_cast<void *>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
 
     suika::protocol::protocolHandlers[suika::protocol::arpType] = std::make_shared<suika::protocol::arp::ArpProtocolHandler>();
 };
@@ -42,13 +43,18 @@ int main() {
     etherDevicePtr->fetchMacAddress(address);
     etherDevicePtr->setSelfPtr(etherDevicePtr);
 
-    auto ipInterfacePtr = std::make_shared<suika::network::IpNetworkInterface>(suika::network::INTERFACE_FAMILY_IP);
+    auto ipInterfacePtr = std::make_shared<suika::network::IpNetworkInterface>(
+            suika::network::INTERFACE_FAMILY_IP,
+            "192.0.2.2",
+            "255.255.255.0"
+    );
     ipInterfacePtr->registerDevice(etherDevicePtr);
     etherDevicePtr->addNetworkInterface(ipInterfacePtr);
 
     suika::logger::info(
             std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
 
+    suika::logger::info(std::format("ip interface : {}", ipInterfacePtr->info()));
     auto intr = suika::interrupt::Interrupt();
 
     intr.init();
