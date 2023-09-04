@@ -17,4 +17,5 @@ add_executable(suika main.cpp
         Arp.cpp
         NetworkInterface.h
         IpNetworkInterface.h
-        IpNetworkInterface.cpp)
+        IpNetworkInterface.cpp
+        ArpData.h)
