@@ -16,7 +16,7 @@ namespace suika::protocol::arp {
         int handle(std::shared_ptr<suika::protocol::ProtocolData> protocolDataPtr) override;
     };
 
-    std::string maxAddressToString(const std::vector<uint8_t> &addr);
+    std::string macAddressToString(const std::vector<uint8_t> &addr);
 
     std::string ipV4ToString(const std::vector<uint8_t> &addr);
 

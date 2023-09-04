@@ -4,7 +4,7 @@
 #include "IpNetworkInterface.h"
 
 namespace suika::protocol::arp {
-    std::string maxAddressToString(const std::vector<uint8_t> &addr) {
+    std::string macAddressToString(const std::vector<uint8_t> &addr) {
         if (addr.size() != 6) {
             throw std::runtime_error("invalid mac address length");
         }
@@ -31,11 +31,11 @@ namespace suika::protocol::arp {
         suika::logger::debug(std::format("arp : operation code={}", arpData.operationCode()));
 
         suika::logger::debug(std::format("sender mac address={}, ip={}",
-                                         suika::protocol::arp::maxAddressToString(arpData.senderHardwareAddress()),
+                                         suika::protocol::arp::macAddressToString(arpData.senderHardwareAddress()),
                                          suika::protocol::arp::ipV4ToString(arpData.senderProtocolAddress())));
 
         suika::logger::debug(std::format("target mac address={}, ip={}",
-                                         suika::protocol::arp::maxAddressToString(arpData.targetHardwareAddress()),
+                                         suika::protocol::arp::macAddressToString(arpData.targetHardwareAddress()),
                                          suika::protocol::arp::ipV4ToString(arpData.targetProtocolAddress())));
 
         if (arpData.protocolAddressLength() != suika::ether::IP_ADDR_LEN ||
