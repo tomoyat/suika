@@ -21,30 +21,30 @@ namespace suika::protocol::arp {
     std::string ipV4ToString(const std::vector<uint8_t> &addr);
 
     struct ArpData {
-        std::shared_ptr<suika::protocol::ProtocolData> protocolDataPtr;
+        std::vector<std::byte> data;
 
-        explicit ArpData(std::shared_ptr<suika::protocol::ProtocolData> protocolData_) : protocolDataPtr{std::move(protocolData_)} {};
+        explicit ArpData(const std::shared_ptr<suika::protocol::ProtocolData>& protocolData_) : data{std::move(protocolData_->data)} {};
 
         std::uint16_t hardwareType() {
-            return (static_cast<std::uint16_t>(protocolDataPtr->data[0]) << 8) | (static_cast<std::uint16_t>(protocolDataPtr->data[1]));
+            return (static_cast<std::uint16_t>(data[0]) << 8) | (static_cast<std::uint16_t>(data[1]));
         }
 
         std::uint16_t protocolType() {
-            return (static_cast<std::uint16_t>(protocolDataPtr->data[2]) << 8) | (static_cast<std::uint16_t>(protocolDataPtr->data[3]));
+            return (static_cast<std::uint16_t>(data[2]) << 8) | (static_cast<std::uint16_t>(data[3]));
         }
 
         std::uint8_t hardwareAddressLength() {
-            return static_cast<std::uint8_t>(protocolDataPtr->data[4]);
+            return static_cast<std::uint8_t>(data[4]);
         }
 
         std::uint8_t protocolAddressLength() {
-            return static_cast<std::uint8_t>(protocolDataPtr->data[5]);
+            return static_cast<std::uint8_t>(data[5]);
         }
 
         std::uint16_t operationCode() {
             // operation code
             // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
-            return (static_cast<std::uint16_t>(protocolDataPtr->data[6]) << 8) | (static_cast<std::uint16_t>(protocolDataPtr->data[7]));
+            return (static_cast<std::uint16_t>(data[6]) << 8) | (static_cast<std::uint16_t>(data[7]));
         }
 
         std::vector<std::uint8_t> senderHardwareAddress() {
@@ -73,7 +73,7 @@ namespace suika::protocol::arp {
         std::vector<std::uint8_t> getAddress(int len, int offset) {
             std::vector<std::uint8_t> ret;
             for (int i = 0; i < len; i++) {
-                ret.push_back(static_cast<std::uint8_t>(protocolDataPtr->data[i + offset]));
+                ret.push_back(static_cast<std::uint8_t>(data[i + offset]));
             }
             return ret;
         }
