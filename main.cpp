@@ -23,9 +23,6 @@ void protocolQueueInit() {
             std::make_pair(suika::protocol::arpType,
                            std::queue<std::shared_ptr<suika::protocol::ProtocolData>>())
     );
-    suika::logger::info(std::format("main protocol queues address = {}",
-                                    static_cast<void *>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
-
     suika::protocol::protocolHandlers[suika::protocol::arpType] = std::make_shared<suika::protocol::arp::ArpProtocolHandler>();
 };
 

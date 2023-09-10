@@ -16,6 +16,8 @@ namespace suika::ether {
     // https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
     constexpr int ETHER_TYPE_IP = 0x0800;
     constexpr int ETHER_TYPE_ARP = 0x0806;
+
+    constexpr int ETHER_FRAME_SIZE_MAX = 1500;
 }
 
 namespace suika::device::ether {
@@ -55,6 +57,8 @@ namespace suika::device::ether {
         std::vector<std::uint8_t> getAddress() override;
 
         std::shared_ptr<suika::device::Device> getSelfPtr() override;
+
+        int transmit(const std::vector<uint8_t> &data, const std::vector<std::uint8_t> &dst, std::uint16_t type) override;
     };
 };
 

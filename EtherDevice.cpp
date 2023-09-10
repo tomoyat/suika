@@ -158,6 +158,26 @@ namespace suika::device::ether {
         return ret;
     }
 
+    int EtherDevice::transmit(const std::vector<std::uint8_t> &data,
+                              const std::vector<std::uint8_t> &dst,
+                              std::uint16_t type) {
+        std::vector<std::uint8_t> payload(suika::ether::ETHER_FRAME_SIZE_MAX);
+
+        if (dst.size() != suika::ether::ETHER_ADDR_LEN) {
+            throw std::runtime_error("error");
+        }
+
+        std::copy(dst.begin(), dst.end(), payload.begin());
+        std::copy(address.begin(), address.end(), payload.begin() + suika::ether::ETHER_ADDR_LEN);
+        payload[12] = static_cast<std::uint8_t>(type >> 8);
+        payload[13] = static_cast<std::uint8_t>(type);
+
+        std::copy(data.begin(), data.end(), payload.begin() + 14);
+
+        write(fd, &payload, payload.size());
+        return 0;
+    }
+
     std::string addressToString(const std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr) {
         return std::format("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", addr[0], addr[1], addr[2], addr[3], addr[4],
                            addr[5]);

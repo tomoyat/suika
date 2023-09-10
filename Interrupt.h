@@ -70,7 +70,6 @@ namespace suika::interrupt {
     private:
         void interruptThread() {
             suika::logger::info("run interrupt thread");
-            suika::logger::info(std::format("thread protocol queues address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
             int terminate = 0;
 
             pthread_barrier_wait(&barrier);
@@ -100,9 +99,6 @@ namespace suika::interrupt {
         void handleProtocolSignal() {
             std::lock_guard<std::mutex> lock(suika::protocol::protocolQueuesMutex);
 
-            suika::logger::info(std::format("protocol queues address = {}", static_cast<void*>(&suika::protocol::protocolQueues)));
-            suika::logger::info(std::format("handle protocol protocol queues address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
-
             for (auto &protocolQueue: suika::protocol::protocolQueues) {
                 auto type = protocolQueue.first;
                 suika::logger::info(std::format("check protocol queue: type = {}, length = {} address = {}",
@@ -119,8 +115,6 @@ namespace suika::interrupt {
             for (const auto& d : inputDevices) {
                 if (d->getIrq() == sig) {
                     suika::logger::info(std::format("device found. process payload. device = {}", d->getInfo()));
-
-                    suika::logger::debug(std::format("handle signal protocol queues address = {}", static_cast<void*>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
                     d->handler(interruptThreadPtr->native_handle());
                 }
             }

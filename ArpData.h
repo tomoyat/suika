@@ -21,7 +21,7 @@ namespace suika::protocol::arp {
 
         explicit ArpData(int size) : data(size) {};
 
-        std::uint16_t hardwareType() {
+        std::uint16_t hardwareType() const {
             return (static_cast<std::uint16_t>(data[0]) << 8) | (static_cast<std::uint16_t>(data[1]));
         }
 
@@ -29,7 +29,7 @@ namespace suika::protocol::arp {
             writeUint16(value, 0);
         }
 
-        std::uint16_t protocolType() {
+        std::uint16_t protocolType() const {
             return (static_cast<std::uint16_t>(data[2]) << 8) | (static_cast<std::uint16_t>(data[3]));
         }
 
@@ -37,7 +37,7 @@ namespace suika::protocol::arp {
             writeUint16(value, 2);
         }
 
-        std::uint8_t hardwareAddressLength() {
+        std::uint8_t hardwareAddressLength() const {
             return static_cast<std::uint8_t>(data[4]);
         }
 
@@ -45,7 +45,7 @@ namespace suika::protocol::arp {
             writeUint8(value, 4);
         }
 
-        std::uint8_t protocolAddressLength() {
+        std::uint8_t protocolAddressLength() const {
             return static_cast<std::uint8_t>(data[5]);
         }
 
@@ -53,7 +53,7 @@ namespace suika::protocol::arp {
             writeUint8(value, 5);
         }
 
-        std::uint16_t operationCode() {
+        std::uint16_t operationCode() const {
             // operation code
             // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
             return (static_cast<std::uint16_t>(data[6]) << 8) | (static_cast<std::uint16_t>(data[7]));
@@ -63,7 +63,7 @@ namespace suika::protocol::arp {
             writeUint16(value, 6);
         }
 
-        std::vector<std::uint8_t> senderHardwareAddress() {
+        [[nodiscard]] std::vector<std::uint8_t> senderHardwareAddress() const {
             return getAddress(hardwareAddressLength(), ARP_HEADER_SIZE);
         }
 
@@ -71,7 +71,7 @@ namespace suika::protocol::arp {
             writeVector(address, ARP_HEADER_SIZE);
         }
 
-        std::vector<std::uint8_t> senderProtocolAddress() {
+        std::vector<std::uint8_t> senderProtocolAddress() const {
             int offset = ARP_HEADER_SIZE + hardwareAddressLength();
             return getAddress(protocolAddressLength(), offset);
         }
@@ -80,7 +80,7 @@ namespace suika::protocol::arp {
             writeVector(address, ARP_HEADER_SIZE + hardwareAddressLength());
         }
 
-        std::vector<std::uint8_t> targetHardwareAddress() {
+        std::vector<std::uint8_t> targetHardwareAddress() const {
             auto hal = hardwareAddressLength();
             int offset = ARP_HEADER_SIZE + hardwareAddressLength() + protocolAddressLength();
             return getAddress(hal, offset);
@@ -90,7 +90,7 @@ namespace suika::protocol::arp {
             writeVector(address, ARP_HEADER_SIZE + hardwareAddressLength() + protocolAddressLength());
         }
 
-        std::vector<std::uint8_t> targetProtocolAddress() {
+        std::vector<std::uint8_t> targetProtocolAddress() const {
             auto hal = hardwareAddressLength();
             auto pal = protocolAddressLength();
             int offset = ARP_HEADER_SIZE + hal * 2 + pal;
@@ -102,7 +102,7 @@ namespace suika::protocol::arp {
         }
 
     private:
-        std::vector<std::uint8_t> getAddress(int len, int offset) {
+        std::vector<std::uint8_t> getAddress(int len, int offset) const {
             std::vector<std::uint8_t> ret;
             for (int i = 0; i < len; i++) {
                 ret.push_back(static_cast<std::uint8_t>(data[i + offset]));
@@ -110,17 +110,17 @@ namespace suika::protocol::arp {
             return ret;
         }
 
-        void writeUint8(std::uint8_t  value, int offset) {
+        void writeUint8(std::uint8_t value, int offset) {
             write(static_cast<std::byte>(value), offset);
         }
 
         void writeUint16(std::uint16_t value, int offset) {
             write(static_cast<std::byte>(value >> 8), offset);
-            write(static_cast<std::byte>(value & 8), offset + 1);
+            write(static_cast<std::byte>(value), offset + 1);
         }
 
-        void writeVector(const std::vector<std::uint8_t > &vec, int offset) {
-            for (int idx = 0; auto &v : vec) {
+        void writeVector(const std::vector<std::uint8_t> &vec, int offset) {
+            for (int idx = 0; auto &v: vec) {
                 data[offset + idx] = static_cast<std::byte>(v);
                 idx++;
             }
@@ -147,6 +147,8 @@ namespace suika::protocol::arp {
         d.setOperationCode(operationCode);
         return d;
     }
+
+    void arpDump(const ArpData &arpData);
 }
 
 #endif //SUIKA_ARPDATA_H

@@ -29,28 +29,26 @@ namespace suika::protocol::arp {
         );
         data.setSenderHardwareAddress(interface->devicePtr->getAddress());
         data.setSenderProtocolAddress(interface->getUnicastVector());
-        // TODO
-        // data.setTargetHardwareAddress(interface->)
+        data.setTargetHardwareAddress(requestData.senderHardwareAddress());
+        data.setTargetProtocolAddress(requestData.senderProtocolAddress());
+
+        std::vector<std::uint8_t> d(data.data.size());
+        for (int idx = 0; auto &v :data.data) {
+            d[idx] = static_cast<std::uint8_t>(v);
+            idx++;
+        }
+
+        suika::logger::info("reply arp data -----");
+        arpDump(data);
+
+        interface->devicePtr->transmit(d, requestData.senderHardwareAddress(), suika::protocol::arpType);
+        return 0;
     }
 
     int ArpProtocolHandler::handle(std::shared_ptr<suika::protocol::ProtocolData> protocolData) {
         ArpData arpData{protocolData};
 
-        suika::logger::debug(
-                std::format("arp : hardware type={}, protocol type={:04x}", arpData.hardwareType(),
-                            arpData.protocolType()));
-        suika::logger::debug(
-                std::format("arp : hardware length={}, protocol length={}", arpData.hardwareAddressLength(),
-                            arpData.protocolAddressLength()));
-        suika::logger::debug(std::format("arp : operation code={}", arpData.operationCode()));
-
-        suika::logger::debug(std::format("sender mac address={}, ip={}",
-                                         suika::protocol::arp::macAddressToString(arpData.senderHardwareAddress()),
-                                         suika::protocol::arp::ipV4ToString(arpData.senderProtocolAddress())));
-
-        suika::logger::debug(std::format("target mac address={}, ip={}",
-                                         suika::protocol::arp::macAddressToString(arpData.targetHardwareAddress()),
-                                         suika::protocol::arp::ipV4ToString(arpData.targetProtocolAddress())));
+        arpDump(arpData);
 
         if (arpData.protocolAddressLength() != suika::ether::IP_ADDR_LEN ||
             arpData.protocolType() != suika::ether::ETHER_TYPE_IP) {
@@ -84,20 +82,28 @@ namespace suika::protocol::arp {
             if (arpData.operationCode() == suika::protocol::arp::OP_REQUEST) {
                 suika::protocol::arp::reply(ipInterface, arpData);
             }
-
-            /***
-             * TODO
-             * 自身のinterfaceのアドレスとarpのtargetのアドレスを比較
-             * arp cacheを更新
-             * arp requestだったらreplyする
-             * 返信用のデータを作って、
-             * interfaceに紐づけられたdeviceのtransmitをよぶ
-             *
-             */
-
         } else {
             throw std::runtime_error("cast error");
         }
         return 0;
+    }
+
+    void arpDump(const ArpData &arpData) {
+        suika::logger::debug(
+                std::format("arp : hardware type={}, protocol type={:04x}", arpData.hardwareType(),
+                            arpData.protocolType()));
+        suika::logger::debug(
+                std::format("arp : hardware length={}, protocol length={}", arpData.hardwareAddressLength(),
+                            arpData.protocolAddressLength()));
+        suika::logger::debug(std::format("arp : operation code={}", arpData.operationCode()));
+
+        suika::logger::debug(std::format("sender mac address={}, ip={}",
+                                         suika::protocol::arp::macAddressToString(arpData.senderHardwareAddress()),
+                                         suika::protocol::arp::ipV4ToString(arpData.senderProtocolAddress())));
+
+        suika::logger::debug(std::format("target mac address={}, ip={}",
+                                         suika::protocol::arp::macAddressToString(arpData.targetHardwareAddress()),
+                                         suika::protocol::arp::ipV4ToString(arpData.targetProtocolAddress())));
+
     }
 }
