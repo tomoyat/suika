@@ -55,8 +55,16 @@ namespace suika::network {
         std::shared_ptr<suika::device::Device> devicePtr{};
 
         int registerDevice(std::shared_ptr<suika::device::Device> ptr) override;
+
+        std::vector<std::uint8_t> getUnicastVector() {
+            std::vector<std::uint8_t> ret;
+            ret.reserve(4);
+            ret.push_back(static_cast<std::uint8_t>(unicast >> 24));
+            ret.push_back(static_cast<std::uint8_t>(unicast >> 16));
+            ret.push_back(static_cast<std::uint8_t>(unicast >> 8));
+            ret.push_back(static_cast<std::uint8_t>(unicast));
+            return ret;
+        }
     };
-
-
 }
 #endif //SUIKA_IPNETWORKINTERFACE_H

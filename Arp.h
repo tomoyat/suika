@@ -11,6 +11,10 @@
 
 namespace suika::protocol::arp {
     constexpr int ARP_HARDWARE_TYPE_ETHER = 0x0001;
+    constexpr int ARP_PROTOCOL_TYPE_IP = 0x0800;
+
+    constexpr int ETHER_ADDRESS_LEN = 6;
+    constexpr int IP_ADDRESS_LEN = 4;
 
     struct ArpProtocolHandler : suika::protocol::ProtocolHandler {
         int handle(std::shared_ptr<suika::protocol::ProtocolData> protocolDataPtr) override;

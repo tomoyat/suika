@@ -149,6 +149,15 @@ namespace suika::device::ether {
         selfPtr = selfPtr_;
     }
 
+    std::vector<std::uint8_t> EtherDevice::getAddress() {
+        std::vector<std::uint8_t> ret;
+        ret.reserve(suika::ether::ETHER_ADDR_LEN);
+        for (const auto& v : address) {
+            ret.push_back(v);
+        }
+        return ret;
+    }
+
     std::string addressToString(const std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> &addr) {
         return std::format("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", addr[0], addr[1], addr[2], addr[3], addr[4],
                            addr[5]);

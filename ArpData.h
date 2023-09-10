@@ -10,6 +10,8 @@
 namespace suika::protocol::arp {
 
     constexpr int ARP_HEADER_SIZE = 8;
+    constexpr int OP_REQUEST = 0x0001;
+    constexpr int OP_REPLY = 0x0002;
 
     struct ArpData {
         std::vector<std::byte> data;

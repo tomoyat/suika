@@ -52,6 +52,8 @@ namespace suika::device::ether {
 
         void setSelfPtr(std::shared_ptr<suika::device::Device> selfPtr_) override;
 
+        std::vector<std::uint8_t> getAddress() override;
+
         std::shared_ptr<suika::device::Device> getSelfPtr() override;
     };
 };

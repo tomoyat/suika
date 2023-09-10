@@ -19,6 +19,20 @@ namespace suika::protocol::arp {
         return std::format("{}.{}.{}.{}", addr[0], addr[1], addr[2], addr[3]);
     }
 
+    int reply(std::shared_ptr<suika::network::IpNetworkInterface> interface, const ArpData& requestData) {
+        auto data = arpDataFactory(
+                suika::protocol::arp::ARP_HARDWARE_TYPE_ETHER,
+                suika::protocol::arp::ARP_PROTOCOL_TYPE_IP,
+                suika::protocol::arp::ETHER_ADDRESS_LEN,
+                suika::protocol::arp::IP_ADDRESS_LEN,
+                suika::protocol::arp::OP_REPLY
+        );
+        data.setSenderHardwareAddress(interface->devicePtr->getAddress());
+        data.setSenderProtocolAddress(interface->getUnicastVector());
+        // TODO
+        // data.setTargetHardwareAddress(interface->)
+    }
+
     int ArpProtocolHandler::handle(std::shared_ptr<suika::protocol::ProtocolData> protocolData) {
         ArpData arpData{protocolData};
 
@@ -53,6 +67,24 @@ namespace suika::protocol::arp {
         auto targetInterface = protocolData->devicePtr->getTargetInterface(suika::network::INTERFACE_FAMILY_IP);
 
         if (auto ipInterface = dynamic_pointer_cast<suika::network::IpNetworkInterface>(targetInterface)) {
+            auto address = arpData.targetProtocolAddress();
+            if (address.size() != suika::ether::IP_ADDR_LEN) {
+                throw std::runtime_error(std::format("not support protocol address size = {}", address.size()));
+            }
+            uint32_t targetProtocolAddress =
+                    static_cast<uint32_t>(address[0]) << 24 |
+                    static_cast<uint32_t>(address[1]) << 16 |
+                    static_cast<uint32_t>(address[2]) << 8 |
+                    static_cast<uint32_t>(address[3]);
+            suika::logger::info(std::format("unicast = {}, target = {}", ipInterface->unicast, targetProtocolAddress));
+            if (targetProtocolAddress != ipInterface->unicast) {
+                throw std::runtime_error(std::format("not support protocol address size = {}", address.size()));
+            }
+
+            if (arpData.operationCode() == suika::protocol::arp::OP_REQUEST) {
+                suika::protocol::arp::reply(ipInterface, arpData);
+            }
+
             /***
              * TODO
              * 自身のinterfaceのアドレスとarpのtargetのアドレスを比較
@@ -62,6 +94,7 @@ namespace suika::protocol::arp {
              * interfaceに紐づけられたdeviceのtransmitをよぶ
              *
              */
+
         } else {
             throw std::runtime_error("cast error");
         }

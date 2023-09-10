@@ -25,6 +25,8 @@ namespace suika::device {
 
         virtual std::shared_ptr<suika::device::Device> getSelfPtr() = 0;
 
+        virtual std::vector<std::uint8_t> getAddress() = 0;
+
         virtual ~Device() = default;
 
         std::shared_ptr<suika::network::NetworkInterface> getTargetInterface(int family) {
