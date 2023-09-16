@@ -65,13 +65,6 @@ namespace suika::device::ether {
         buffer.resize(numOfRead);
         auto frame = suika::ether::EtherFrame(buffer);
 
-        std::vector<std::byte> data{};
-        data.reserve(numOfRead);
-
-        for (auto &v : frame.body()) {
-            data.push_back(static_cast<std::byte>(v));
-        }
-
         std::lock_guard<std::mutex> lock(suika::protocol::protocolQueuesMutex);
         if (suika::protocol::protocolQueues.find(frame.etherType()) == suika::protocol::protocolQueues.end()) {
             suika::logger::warn(std::format("ether deivce protocol queues not found address = {}",
@@ -80,7 +73,7 @@ namespace suika::device::ether {
         }
         suika::protocol::protocolQueues[frame.etherType()].push(
                 std::make_shared<suika::protocol::ProtocolData>(
-                        suika::protocol::ProtocolData{frame.etherType(), data, getSelfPtr()}
+                        suika::protocol::ProtocolData{frame.etherType(), frame.body(), getSelfPtr()}
                 )
         );
 

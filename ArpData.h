@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "Protocol.h"
+#include "BinaryPayload.h"
 
 namespace suika::protocol::arp {
 
@@ -13,16 +14,18 @@ namespace suika::protocol::arp {
     constexpr int OP_REQUEST = 0x0001;
     constexpr int OP_REPLY = 0x0002;
 
-    struct ArpData {
-        std::vector<std::byte> data;
+    struct ArpData : BinaryPayload {
+        explicit ArpData(const std::shared_ptr<suika::protocol::ProtocolData> &protocolData_) {
+          data = std::vector<uint8_t>(protocolData_->data.size(), 0);
+          std::copy(protocolData_->data.begin(), protocolData_->data.end(), data.begin());
+        };
 
-        explicit ArpData(const std::shared_ptr<suika::protocol::ProtocolData> &protocolData_) : data{
-                std::move(protocolData_->data)} {};
-
-        explicit ArpData(int size) : data(size) {};
+        explicit ArpData(int size) {
+            data = std::vector<std::uint8_t>(size, 0);
+        }
 
         std::uint16_t hardwareType() const {
-            return (static_cast<std::uint16_t>(data[0]) << 8) | (static_cast<std::uint16_t>(data[1]));
+            return readUint16(0);
         }
 
         void setHardwareType(uint16_t value) {
@@ -30,7 +33,7 @@ namespace suika::protocol::arp {
         }
 
         std::uint16_t protocolType() const {
-            return (static_cast<std::uint16_t>(data[2]) << 8) | (static_cast<std::uint16_t>(data[3]));
+            return readUint16(2);
         }
 
         void setProtocolType(std::uint16_t value) {
@@ -38,7 +41,7 @@ namespace suika::protocol::arp {
         }
 
         std::uint8_t hardwareAddressLength() const {
-            return static_cast<std::uint8_t>(data[4]);
+            return readUint8(4);
         }
 
         void setHardwareAddressLength(std::uint8_t value) {
@@ -46,7 +49,7 @@ namespace suika::protocol::arp {
         }
 
         std::uint8_t protocolAddressLength() const {
-            return static_cast<std::uint8_t>(data[5]);
+            return readUint8(5);
         }
 
         void setProtocolAddressLength(std::uint8_t value) {
@@ -56,7 +59,7 @@ namespace suika::protocol::arp {
         std::uint16_t operationCode() const {
             // operation code
             // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
-            return (static_cast<std::uint16_t>(data[6]) << 8) | (static_cast<std::uint16_t>(data[7]));
+            return readUint16(6);
         }
 
         void setOperationCode(std::uint16_t value) {
@@ -105,29 +108,9 @@ namespace suika::protocol::arp {
         std::vector<std::uint8_t> getAddress(int len, int offset) const {
             std::vector<std::uint8_t> ret;
             for (int i = 0; i < len; i++) {
-                ret.push_back(static_cast<std::uint8_t>(data[i + offset]));
+                ret.push_back(data[i + offset]);
             }
             return ret;
-        }
-
-        void writeUint8(std::uint8_t value, int offset) {
-            write(static_cast<std::byte>(value), offset);
-        }
-
-        void writeUint16(std::uint16_t value, int offset) {
-            write(static_cast<std::byte>(value >> 8), offset);
-            write(static_cast<std::byte>(value), offset + 1);
-        }
-
-        void writeVector(const std::vector<std::uint8_t> &vec, int offset) {
-            for (int idx = 0; auto &v: vec) {
-                data[offset + idx] = static_cast<std::byte>(v);
-                idx++;
-            }
-        }
-
-        void write(std::byte b, int offset) {
-            data[offset] = b;
         }
     };
 

@@ -8,16 +8,16 @@ struct BinaryPayload {
     // 数値はビッグエンディアンで格納されている
     std::vector<std::uint8_t> data;
 protected:
-    std::uint8_t readUint8(int offset) {
+    std::uint8_t readUint8(int offset) const {
         return data[offset];
     }
 
-    std::uint16_t readUint16(int offset) {
+    [[nodiscard]] std::uint16_t readUint16(int offset) const {
         return static_cast<uint16_t>(data[offset]) << 8
                | static_cast<uint16_t>(data[offset + 1]);
     }
 
-    std::uint32_t readUint32(int offset) {
+    [[nodiscard]] std::uint32_t readUint32(int offset) const {
         return
                 static_cast<uint32_t>(data[offset]) << 24
                 | static_cast<uint32_t>(data[offset + 1]) << 16
@@ -25,7 +25,7 @@ protected:
                 | static_cast<uint16_t>(data[offset + 3]);
     }
 
-    std::vector<std::uint8_t> readVector(int offset, int len) {
+    [[nodiscard]] std::vector<std::uint8_t> readVector(int offset, int len) const {
         std::vector<std::uint8_t> result(len);
         std::copy(data.begin() + offset, data.begin() + offset + len, result.begin());
         return result;
