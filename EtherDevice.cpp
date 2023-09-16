@@ -10,6 +10,7 @@
 #include "Util.h"
 #include "Logger.h"
 #include "Protocol.h"
+#include "EtherFrame.h"
 
 namespace suika::device::ether {
     int EtherDevice::open() {
@@ -54,50 +55,38 @@ namespace suika::device::ether {
     }
 
     int EtherDevice::handler(pthread_t pthread) {
-        char buffer[1514];
+        // char buffer[1514];
+        std::vector<std::uint8_t> buffer(1514, 0);
         // https://www.gabriel.urdhr.fr/2021/05/08/tuntap/
         // readは1frameだけを取れるらしい？
         // signalが抜けるかもしれないので、poolとかで読めるだけ読むのが良い
-        int numOfRead = read(fd, buffer, 1514);
+        int numOfRead = read(fd, &buffer[0], 1514);
 
-        std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> srcAddr;
-        std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> dstAddr;
-
-        for (int i = 0, cnt = 0; i < numOfRead && cnt < suika::ether::ETHER_ADDR_LEN; i++, cnt++) {
-            dstAddr[cnt] = static_cast<std::uint8_t>(buffer[i]);
-        }
-
-        for (int i = 6, cnt = 0; i < numOfRead && cnt < suika::ether::ETHER_ADDR_LEN; i++, cnt++) {
-            srcAddr[cnt] = static_cast<std::uint8_t>(buffer[i]);
-        }
-
-        // protocol type: https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml
-        std::uint16_t etherType = 0;
-        etherType = static_cast<std::uint8_t>(buffer[12]);
-        etherType = etherType << 8;
-        etherType = etherType | static_cast<std::uint8_t>(buffer[13]);
+        buffer.resize(numOfRead);
+        auto frame = suika::ether::EtherFrame(buffer);
 
         std::vector<std::byte> data{};
         data.reserve(numOfRead);
-        for (int i = 14; i < numOfRead; i++) {
-            data.push_back(static_cast<std::byte>(buffer[i]));
+
+        for (auto &v : frame.body()) {
+            data.push_back(static_cast<std::byte>(v));
         }
 
         std::lock_guard<std::mutex> lock(suika::protocol::protocolQueuesMutex);
-        if (suika::protocol::protocolQueues.find(etherType) == suika::protocol::protocolQueues.end()) {
+        if (suika::protocol::protocolQueues.find(frame.etherType()) == suika::protocol::protocolQueues.end()) {
             suika::logger::warn(std::format("ether deivce protocol queues not found address = {}",
                                             static_cast<void *>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
             return 0;
         }
-        suika::protocol::protocolQueues[etherType].push(
+        suika::protocol::protocolQueues[frame.etherType()].push(
                 std::make_shared<suika::protocol::ProtocolData>(
-                        suika::protocol::ProtocolData{etherType, data, getSelfPtr()}
+                        suika::protocol::ProtocolData{frame.etherType(), data, getSelfPtr()}
                 )
         );
 
         suika::logger::debug(
-                std::format("ether frame: src={}, dst={}, type={:04x}", addressToString(srcAddr),
-                            addressToString(dstAddr), etherType));
+                std::format("ether frame: src={}, dst={}, type={:04x}", addressToString(frame.srcAddr()),
+                            addressToString(frame.dstAddr()), frame.etherType()));
 
         pthread_kill(pthread, SIGUSR1);
         return 0;
