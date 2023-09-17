@@ -101,8 +101,8 @@ namespace suika::interrupt {
 
             for (auto &protocolQueue: suika::protocol::protocolQueues) {
                 auto type = protocolQueue.first;
-                suika::logger::info(std::format("check protocol queue: type = {}, length = {} address = {}",
-                                                type, protocolQueue.second.size(), static_cast<void*>(&protocolQueue.second)));
+                suika::logger::info(std::format("check protocol queue: type = {:04x}, length = {}",
+                                                type, protocolQueue.second.size()));
                 while (!protocolQueue.second.empty()) {
                     auto d = protocolQueue.second.front();
                     protocolQueue.second.pop();

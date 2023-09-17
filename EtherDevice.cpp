@@ -67,8 +67,7 @@ namespace suika::device::ether {
 
         std::lock_guard<std::mutex> lock(suika::protocol::protocolQueuesMutex);
         if (suika::protocol::protocolQueues.find(frame.etherType()) == suika::protocol::protocolQueues.end()) {
-            suika::logger::warn(std::format("ether deivce protocol queues not found address = {}",
-                                            static_cast<void *>(&suika::protocol::protocolQueues[suika::protocol::arpType])));
+            suika::logger::warn(std::format("ether deivce protocol queues not found. type = {:04x}", frame.etherType()));
             return 0;
         }
         suika::protocol::protocolQueues[frame.etherType()].push(
@@ -77,9 +76,7 @@ namespace suika::device::ether {
                 )
         );
 
-        suika::logger::debug(
-                std::format("ether frame: src={}, dst={}, type={:04x}", addressToString(frame.srcAddr()),
-                            addressToString(frame.dstAddr()), frame.etherType()));
+        suika::logger::debug(std::format("input ether frame: {}",frame.info()));
 
         pthread_kill(pthread, SIGUSR1);
         return 0;
@@ -149,14 +146,16 @@ namespace suika::device::ether {
             throw std::runtime_error("error");
         }
 
-        std::copy(dst.begin(), dst.end(), payload.begin());
-        std::copy(address.begin(), address.end(), payload.begin() + suika::ether::ETHER_ADDR_LEN);
-        payload[12] = static_cast<std::uint8_t>(type >> 8);
-        payload[13] = static_cast<std::uint8_t>(type);
+        auto frame = suika::ether::EtherFrame();
 
-        std::copy(data.begin(), data.end(), payload.begin() + 14);
+        frame.setDstAddr(dst);
+        frame.setSrcAddr(address);
+        frame.setEtherType(type);
+        frame.setBody(data);
 
-        write(fd, &payload, payload.size());
+        suika::logger::info(std::format("transmit ether info = {}", frame.info()));
+
+        write(fd, &(frame.data[0]), frame.data.size());
         return 0;
     }
 
