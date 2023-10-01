@@ -10,29 +10,7 @@
 #include <cstdint>
 
 #include "NetworkInterface.h"
-
-namespace suika::network {
-    inline uint32_t Ipv4strToUint32(const std::string &str) {
-        uint32_t ret = 0;
-        int idx = 0;
-        for (auto word: str | std::views::split('.')) {
-            uint32_t value;
-            std::from_chars(word.data(), word.data() + word.size(), value, 10);
-            if (idx >= 4) {
-                throw std::runtime_error(std::format("invalid format {}", str));
-            }
-            ret = ret << 8 | value;
-            idx++;
-        }
-        return ret;
-    }
-
-    inline std::string Uint32ToIpv4str(std::uint32_t addr) {
-        return std::format("{}.{}.{}.{}",
-                           (addr >> 24) & 255, (addr >> 16) & 255,
-                           (addr >> 8) & 255, addr & 255);
-    }
-}
+#include "IpUtils.h"
 
 namespace suika::network {
     struct IpNetworkInterface : NetworkInterface {
@@ -42,14 +20,19 @@ namespace suika::network {
 
         explicit IpNetworkInterface(int family_, const std::string &unicast_, const std::string &netmask_) {
             family = family_;
-            unicast = Ipv4strToUint32(unicast_);
-            netmask = Ipv4strToUint32(netmask_);
+            unicast = suika::ipUtils::Ipv4strToUint32(unicast_);
+            netmask = suika::ipUtils::Ipv4strToUint32(netmask_);
             broadcast = (unicast & netmask) | ~netmask;
         }
 
         std::string info() {
-            return std::format("family = {}, unicast => {}, netmask = {}, broadcast = {}",
-                               family, Uint32ToIpv4str(unicast), Uint32ToIpv4str(netmask), Uint32ToIpv4str(broadcast));
+            return std::format(
+                    "family = {}, unicast => {}, netmask = {}, broadcast = {}",
+                    family,
+                    suika::ipUtils::Uint32ToIpv4str(unicast),
+                    suika::ipUtils::Uint32ToIpv4str(netmask),
+                    suika::ipUtils::Uint32ToIpv4str(broadcast)
+            );
         }
 
         std::shared_ptr<suika::device::Device> devicePtr{};
