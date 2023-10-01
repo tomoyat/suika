@@ -24,4 +24,6 @@ add_executable(suika main.cpp
         Ipv4.h
         Ipv4.cpp
         Ipv4Data.h
-        IpUtils.h)
+        IpUtils.h
+        Icmp.cpp
+        Icmp.h)

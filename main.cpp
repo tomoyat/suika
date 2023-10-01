@@ -5,6 +5,7 @@
 #include "Arp.h"
 #include "IpNetworkInterface.h"
 #include "Ipv4.h"
+#include "Icmp.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -35,10 +36,16 @@ void protocolQueueInit() {
     suika::protocol::protocolHandlers[suika::protocol::ipType] = std::make_shared<suika::protocol::ipv4::Ipv4ProtocolHandler>();
 };
 
+void ipProtocolInit() {
+    suika::protocol::ipv4::protocolHandlers[suika::protocol::ipv4::ICMP_TYPE] =
+            std::make_shared<suika::protocol::icmp::IcmpHandler>();
+}
+
 int main() {
     setupTunDevice();
 
     protocolQueueInit();
+    ipProtocolInit();
 
     std::shared_ptr<suika::device::ether::EtherDevice> etherDevicePtr =
             std::make_shared<suika::device::ether::EtherDevice>(
