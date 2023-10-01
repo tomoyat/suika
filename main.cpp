@@ -4,6 +4,7 @@
 #include "Interrupt.h"
 #include "Arp.h"
 #include "IpNetworkInterface.h"
+#include "Ipv4.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -24,6 +25,14 @@ void protocolQueueInit() {
                            std::queue<std::shared_ptr<suika::protocol::ProtocolData>>())
     );
     suika::protocol::protocolHandlers[suika::protocol::arpType] = std::make_shared<suika::protocol::arp::ArpProtocolHandler>();
+
+    suika::protocol::protocolQueues.insert(
+            std::make_pair(
+                    suika::protocol::ipType,
+                    std::queue<std::shared_ptr<suika::protocol::ProtocolData>>()
+            )
+    );
+    suika::protocol::protocolHandlers[suika::protocol::ipType] = std::make_shared<suika::protocol::ipv4::Ipv4ProtocolHandler>();
 };
 
 int main() {

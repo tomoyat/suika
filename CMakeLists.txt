@@ -20,4 +20,8 @@ add_executable(suika main.cpp
         IpNetworkInterface.cpp
         ArpData.h
         EtherFrame.h
-        BinaryPayload.h)
+        BinaryPayload.h
+        Ipv4.h
+        Ipv4.cpp
+        Ipv4Data.h
+        IpUtils.h)

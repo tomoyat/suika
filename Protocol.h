@@ -9,7 +9,10 @@
 #include "EtherDevice.h"
 
 namespace suika::protocol {
+    // https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml
     static std::uint16_t arpType = 0x0806;
+    static std::uint16_t ipType = 0x800;
+
     struct ProtocolData {
         std::uint16_t type;
         std::vector<std::uint8_t> data;
