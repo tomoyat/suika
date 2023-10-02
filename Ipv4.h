@@ -2,6 +2,7 @@
 #define SUIKA_IPV4_H
 
 #include "Protocol.h"
+#include "IpNetworkInterface.h"
 
 namespace suika::protocol::ipv4 {
 
@@ -14,6 +15,8 @@ namespace suika::protocol::ipv4 {
     struct Ipv4ProtocolData {
         std::uint8_t type;
         std::vector<std::uint8_t> data;
+        std::shared_ptr<suika::network::IpNetworkInterface> ipNetworkInterfacePtr;
+
     };
 
     struct ProtocolHandler {

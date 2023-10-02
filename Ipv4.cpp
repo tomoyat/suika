@@ -42,8 +42,9 @@ namespace suika::protocol::ipv4 {
                   data.begin());
 
         auto interface = protocolDataPtr->devicePtr->getTargetInterface(suika::network::INTERFACE_FAMILY_IP);
-        if (auto ipInterface = dynamic_pointer_cast<suika::network::IpNetworkInterface>(interface)) {
-            if (ipInterface->unicast != ipv4Packet.dst()) {
+        auto ipNetworkInterface = dynamic_pointer_cast<suika::network::IpNetworkInterface>(interface);
+        if (ipNetworkInterface) {
+            if (ipNetworkInterface->unicast != ipv4Packet.dst()) {
                 throw std::runtime_error("ip not match error");
             }
         } else {
@@ -56,7 +57,7 @@ namespace suika::protocol::ipv4 {
         }
 
         auto d = std::make_shared<Ipv4ProtocolData>(
-                Ipv4ProtocolData{protocol, data}
+                Ipv4ProtocolData{protocol, data, ipNetworkInterface}
         );
         protocolHandlers[protocol]->handle(d);
         // TODO ICMPと仮定してちょっとやってみる
