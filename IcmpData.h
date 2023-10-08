@@ -2,6 +2,7 @@
 #define SUIKA_ICMPDATA_H
 
 #include "BinaryPayload.h"
+#include "format"
 
 namespace suika::protocol::icmp {
     struct IcmpData : BinaryPayload {
@@ -40,7 +41,7 @@ namespace suika::protocol::icmp {
     };
 
     struct IcmpDataEcho : IcmpData {
-        explicit IcmpDataEcho(const std::vector<std::uint8_t> &data_): IcmpData(data_) {}
+        explicit IcmpDataEcho(const std::vector<std::uint8_t> &data_) : IcmpData(data_) {}
 
         [[nodiscard]] std::uint16_t identifier() const {
             return readUint16(4);
@@ -56,6 +57,11 @@ namespace suika::protocol::icmp {
 
         void sequenceNumber(std::uint16_t value) {
             writeUint16(value, 6);
+        }
+
+        [[nodiscard]] std::string info() const {
+            return std::format("type = {}, code = {}, checksum = {}, identifier = {}, sequenceNumber = {}",
+                                 type(), code(), checksum(), identifier(), sequenceNumber());
         }
     };
 }

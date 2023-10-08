@@ -29,6 +29,18 @@ namespace suika::ipUtils {
                            (addr >> 24) & 255, (addr >> 16) & 255,
                            (addr >> 8) & 255, addr & 255);
     }
+
+    inline std::uint16_t calculateChecksum(const std::vector<std::uint8_t> &data, int begin, int end) {
+        std::uint32_t sum = 0;
+        for (int i = begin; i < end && i < data.size(); i+=2) {
+            sum += static_cast<std::uint32_t>(data[i]) << 8 | static_cast<std::uint32_t>(data[i+1]);
+        }
+        return static_cast<std::uint16_t>((sum + (sum >> 16)) & 0x0000FFFF);
+    }
+
+    inline bool verifyChecksum(const std::vector<std::uint8_t> &data, int begin, int end) {
+        return calculateChecksum(data, begin, end) == 0xFFFF;
+    }
 }
 
 #endif //SUIKA_IPUTILS_H

@@ -122,11 +122,7 @@ namespace suika::protocol::ipv4 {
 
         [[nodiscard]] bool verifyHeader() const {
             auto headerByteLen = headerLength() * 4;
-            std::uint32_t sum = 0;
-            for (int i = 0; i < headerByteLen && i < data.size(); i+=2) {
-                sum += static_cast<std::uint32_t>(data[i]) << 8 | static_cast<std::uint32_t>(data[i+1]);
-            }
-            auto ret = static_cast<std::uint16_t>((sum + (sum >> 16)) & 0x0000FFFF);
+            auto ret = suika::ipUtils::calculateChecksum(data, 0, headerByteLen);
             if (ret == 0xFFFF) {
                 return true;
             }
