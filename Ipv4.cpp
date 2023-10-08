@@ -28,6 +28,10 @@ namespace suika::protocol::ipv4 {
         // header length check
         // total length check
         // checksum check
+        if (!ipv4Packet.verifyHeader()) {
+            suika::logger::info("invalid header.");
+            throw std::runtime_error("invalid header");
+        }
         // fragment check
         auto protocol = ipv4Packet.protocol();
 

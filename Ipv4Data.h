@@ -39,11 +39,12 @@ namespace suika::protocol::ipv4 {
             writeUint8(value, val | hl);
         }
 
+        // 32bitが何個分かを示す
+        // byte数にするならかける4が必要
         void headerLength(std::uint8_t value) {
             auto v = version();
             writeUint8(value, (v << 4) | (value & 0x0F));
         }
-
 
         [[nodiscard]] std::uint8_t typeOfService() const {
             return readUint8(1);
@@ -117,6 +118,19 @@ namespace suika::protocol::ipv4 {
 
         void dst(std::uint16_t value) {
             writeUint32(value, 16);
+        }
+
+        [[nodiscard]] bool verifyHeader() const {
+            auto headerByteLen = headerLength() * 4;
+            std::uint32_t sum = 0;
+            for (int i = 0; i < headerByteLen && i < data.size(); i+=2) {
+                sum += static_cast<std::uint32_t>(data[i]) << 8 | static_cast<std::uint32_t>(data[i+1]);
+            }
+            auto ret = static_cast<std::uint16_t>((sum + (sum >> 16)) & 0x0000FFFF);
+            if (ret == 0xFFFF) {
+                return true;
+            }
+            return false;
         }
     };
 }
