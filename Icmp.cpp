@@ -4,6 +4,14 @@
 #include "IpUtils.h"
 
 namespace suika::protocol::icmp {
+
+    int replyIcmp(const IcmpDataEcho &request) {
+        auto reply = IcmpDataEcho{request};
+        reply.type(0);
+
+
+    }
+
     int suika::protocol::icmp::IcmpHandler::handle(
             std::shared_ptr<suika::protocol::ipv4::Ipv4ProtocolData> protocolDataPtr) {
 

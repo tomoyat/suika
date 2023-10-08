@@ -28,3 +28,5 @@ add_executable(suika main.cpp
         Icmp.cpp
         Icmp.h
         IcmpData.h)
+
+add_executable(test test.cpp)
