@@ -61,7 +61,7 @@ namespace suika::protocol::ipv4 {
         }
 
         auto d = std::make_shared<Ipv4ProtocolData>(
-                Ipv4ProtocolData{protocol, data, ipNetworkInterface}
+                Ipv4ProtocolData{protocol, data, ipv4Packet.src(), ipv4Packet.dst(), ipNetworkInterface}
         );
         protocolHandlers[protocol]->handle(d);
         // TODO ICMPと仮定してちょっとやってみる
