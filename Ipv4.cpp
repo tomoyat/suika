@@ -64,16 +64,6 @@ namespace suika::protocol::ipv4 {
                 Ipv4ProtocolData{protocol, data, ipv4Packet.src(), ipv4Packet.dst(), ipNetworkInterface}
         );
         protocolHandlers[protocol]->handle(d);
-        // TODO ICMPと仮定してちょっとやってみる
-        //auto payload = BinaryPayload{data};
-        //auto type = payload.readUint8(0);
-        //auto code = payload.readUint8(1);
-        //auto checksum = payload.readUint16(2);
-        //suika::logger::info(
-        //        std::format(
-        //                "icmp type = {}, code = {}, checksum = {}", type, code, checksum
-        //        )
-        //);
 
         return 0;
     }
