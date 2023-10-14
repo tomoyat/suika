@@ -64,6 +64,8 @@ int main() {
     ipInterfacePtr->registerDevice(etherDevicePtr);
     etherDevicePtr->addNetworkInterface(ipInterfacePtr);
 
+    suika::protocol::ipv4::ipNetworkInterfaceList.push_back(ipInterfacePtr);
+
     suika::logger::info(
             std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
 

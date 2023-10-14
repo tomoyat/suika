@@ -7,16 +7,16 @@
 namespace suika::protocol::icmp {
 
     int replyIcmp(const IcmpDataEcho &request,
+                  const std::uint32_t dst,
                   const std::shared_ptr<suika::network::IpNetworkInterface> ipNetworkInterfacePtr) {
         auto reply = IcmpDataEcho{request.data};
-        reply.type(0);
+        reply.type(suika::protocol::icmp::TYPE_ECHO_REPLY);
         reply.checksum(0);
 
         auto checksum = ~suika::ipUtils::calculateChecksum(reply.data, 0, reply.data.size());
         reply.checksum(checksum);
 
         suika::logger::info(std::format("icmp reply {}", reply.info()));
-
 
 
         return 0;
@@ -39,8 +39,13 @@ namespace suika::protocol::icmp {
         suika::logger::info(std::format("interface = {}",
                                         suika::ipUtils::Uint32ToIpv4str(protocolDataPtr->ipNetworkInterfacePtr->unicast)));
 
-        replyIcmp(d, protocolDataPtr->ipNetworkInterfacePtr);
+        switch (d.type()) {
+            case suika::protocol::icmp::TYPE_ECHO:
+                replyIcmp(d, protocolDataPtr->src, protocolDataPtr->ipNetworkInterfacePtr);
+                break;
+            default:
+                break;
+        }
         return 0;
-
     }
 }
