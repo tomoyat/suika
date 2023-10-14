@@ -42,9 +42,9 @@ protected:
 
     void writeUint32(std::uint32_t value, int offset) {
         write(static_cast<std::uint8_t>(value >> 24), offset);
-        write(static_cast<std::uint8_t>(value >> 16), offset);
-        write(static_cast<std::uint8_t>(value >> 8), offset);
-        write(static_cast<std::uint8_t>(value), offset);
+        write(static_cast<std::uint8_t>(value >> 16), offset + 1);
+        write(static_cast<std::uint8_t>(value >> 8), offset + 2);
+        write(static_cast<std::uint8_t>(value), offset + 3);
     }
 
     void writeVector(const std::vector<std::uint8_t> &vec, int offset) {

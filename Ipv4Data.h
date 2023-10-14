@@ -3,6 +3,7 @@
 
 #include "BinaryPayload.h"
 #include "Protocol.h"
+#include "Ipv4.h"
 
 namespace suika::protocol::ipv4 {
     struct Ipv4Data : BinaryPayload {
@@ -13,6 +14,12 @@ namespace suika::protocol::ipv4 {
 
         explicit Ipv4Data(int size) {
             data = std::vector<std::uint8_t>(size, 0);
+        }
+
+        explicit Ipv4Data() {
+            data = std::vector<std::uint8_t>(20, 0);
+            this->version(suika::protocol::ipv4::IP_VERSION_IPV4);
+            this->headerLength(5);
         }
 
         [[nodiscard]] std::uint8_t versionAndHeaderLength() const {
@@ -33,17 +40,22 @@ namespace suika::protocol::ipv4 {
             return static_cast<std::uint8_t>(value & 0x0F);
         }
 
+        [[nodiscard]] std::uint16_t headerLengthByte() const {
+            std::uint16_t l = headerLength();
+            return l * 4;
+        }
+
         void version(std::uint8_t value) {
             auto hl = headerLength();
             auto val = static_cast<std::uint8_t>(value << 4);
-            writeUint8(value, val | hl);
+            writeUint8(val | hl, 0);
         }
 
         // 32bitが何個分かを示す
         // byte数にするならかける4が必要
         void headerLength(std::uint8_t value) {
             auto v = version();
-            writeUint8(value, (v << 4) | (value & 0x0F));
+            writeUint8((v << 4) | (value & 0x0F), 0);
         }
 
         [[nodiscard]] std::uint8_t typeOfService() const {
@@ -95,7 +107,6 @@ namespace suika::protocol::ipv4 {
             writeUint8(value, 9);
         }
 
-
         [[nodiscard]] std::uint16_t checksum() const {
             return readUint16(10);
         }
@@ -116,8 +127,24 @@ namespace suika::protocol::ipv4 {
             return readUint32(16);
         }
 
-        void dst(std::uint16_t value) {
+        void dst(std::uint32_t value) {
             writeUint32(value, 16);
+        }
+
+        std::vector<std::uint8_t> payload() {
+            auto dataLength = totalLength() - headerLengthByte();
+            auto ret = std::vector<std::uint8_t>(dataLength);
+            std::copy(data.begin() + headerLengthByte(),
+                      data.begin() + totalLength(),
+                      ret.begin());
+            return ret;
+        }
+
+        void payload(std::vector<uint8_t> d) {
+            std::uint16_t l = headerLengthByte() + d.size();
+            totalLength(l);
+            data.resize(l, 0);
+            std::copy(d.begin(), d.begin() + d.size(), data.begin() + headerLengthByte());
         }
 
         [[nodiscard]] bool verifyHeader() const {
@@ -127,6 +154,26 @@ namespace suika::protocol::ipv4 {
                 return true;
             }
             return false;
+        }
+
+        void setCheckSum() {
+            auto headerLen = headerLengthByte();
+            checksum(0);
+            std::uint16_t sum = ~suika::ipUtils::calculateChecksum(data, 0, headerLen);
+            checksum(sum);
+        }
+
+        [[nodiscard]] std::string info() const {
+            return
+            std::format("version = {}, headerLength = {}, ", version(), headerLength())
+            +
+            std::format("typeOfService = {}, totalLength = {}, ", typeOfService(), totalLength())
+            +
+            std::format("identification = {}, flagsAndFragmentOffset = {}, ", identification(), flagsAndFragmentOffset())
+            +
+            std::format("timeToLive = {}, protocol = {}, ", timeToLive(), protocol())
+            +
+            std::format("src = {}, dst = {}, ", suika::ipUtils::Uint32ToIpv4str(src()), suika::ipUtils::Uint32ToIpv4str(dst()));
         }
     };
 }

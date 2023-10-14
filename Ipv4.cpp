@@ -3,6 +3,9 @@
 #include "Logger.h"
 #include "IpUtils.h"
 #include "IpNetworkInterface.h"
+#include "RouteTable.h"
+#include "ArpCache.h"
+#include "Protocol.h"
 
 namespace suika::protocol::ipv4 {
     int Ipv4ProtocolHandler::handle(
@@ -24,6 +27,7 @@ namespace suika::protocol::ipv4 {
         );
 
         // TODO
+        suika::logger::info(std::format("ip input packet = {}", ipv4Packet.info()));
         // version check
         // header length check
         // total length check
@@ -35,15 +39,7 @@ namespace suika::protocol::ipv4 {
         // fragment check
         auto protocol = ipv4Packet.protocol();
 
-        std::uint32_t headerLength = ipv4Packet.headerLength() * 4;
-        auto total = ipv4Packet.totalLength();
-        auto dataLength = total - headerLength;
-
-
-        auto data = std::vector<std::uint8_t>(dataLength);
-        std::copy(ipv4Packet.data.begin() + headerLength,
-                  ipv4Packet.data.begin() + total,
-                  data.begin());
+        std::vector<std::uint8_t> data = ipv4Packet.payload();
 
         auto interface = protocolDataPtr->devicePtr->getTargetInterface(suika::network::INTERFACE_FAMILY_IP);
         auto ipNetworkInterface = dynamic_pointer_cast<suika::network::IpNetworkInterface>(interface);
@@ -74,22 +70,64 @@ namespace suika::protocol::ipv4 {
             throw std::runtime_error("src is required");
         }
 
-        // route tableを検索
-        // ここで次のipが決まる
-        auto interface = suika::protocol::ipv4::ipNetworkInterfaceList[0];
-        if (src != IP_ADDR_ANY && src != interface->unicast) {
+
+        auto route = suika::routeTable::routeTable.lookup(dst);
+
+        if (src != IP_ADDR_ANY && src != route.interface->unicast) {
             suika::logger::error(
                     std::format("ip not match src = {}, interface unicast = {}",
                                 suika::ipUtils::Uint32ToIpv4str(src),
-                                suika::ipUtils::Uint32ToIpv4str(interface->unicast))
+                                suika::ipUtils::Uint32ToIpv4str(route.interface->unicast))
             );
             throw std::runtime_error("ip not match");
         }
-        uint32_t next = suika::ipUtils::Ipv4strToUint32("192.0.2.1");
+        std::uint32_t gateway = route.gateway;
 
         // ipのデータを作る
+        auto ipv4Packet = Ipv4Data();
+        ipv4Packet.typeOfService(0);
 
-        //
+        auto total = ipv4Packet.headerLengthByte() + data.size();
+        ipv4Packet.totalLength(total);
+
+        auto id = ip_gen_id();
+        ipv4Packet.identification(id);
+
+        ipv4Packet.flagsAndFragmentOffset(0);
+        ipv4Packet.timeToLive(0xff);
+        ipv4Packet.protocol(protocol);
+        ipv4Packet.checksum(0);
+        suika::logger::info(std::format("ipv4 output: src = {}, dst = {}",
+                                        suika::ipUtils::Uint32ToIpv4str(src),
+                                        suika::ipUtils::Uint32ToIpv4str(dst)));
+
+        ipv4Packet.src(src);
+        ipv4Packet.dst(dst);
+
+        ipv4Packet.setCheckSum();
+        suika::logger::info(std::format("output ip packet = {}", ipv4Packet.info()));
+
+        ipv4Packet.payload(data);
+
+
+        // ARP cacheの探索をして、interfaceのetherを叩く
+        if (auto c = suika::protocol::arp::arpCache.select(gateway)) {
+            auto target = c.value().hardwareAddress;
+            route.interface->devicePtr->transmit(ipv4Packet.data, target, suika::protocol::ipType);
+        } else {
+            // Todo Arp Request
+            throw std::runtime_error("arp request not impl");
+        }
+        return 0;
     }
 
+    std::uint16_t ip_gen_id(void) {
+        static std::mutex ipGenIdMutex;
+        static uint16_t id = 128;
+        uint16_t ret;
+        std::lock_guard<std::mutex> lock(ipGenIdMutex);
+
+        ret = id++;
+        return ret;
+    };
 }

@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "EtherDevice.h"
 #include "IpNetworkInterface.h"
+#include "ArpCache.h"
 
 namespace suika::protocol::arp {
     std::string macAddressToString(const std::vector<uint8_t> &addr) {
@@ -78,6 +79,21 @@ namespace suika::protocol::arp {
             if (targetProtocolAddress != ipInterface->unicast) {
                 throw std::runtime_error(std::format("not support protocol address size = {}", address.size()));
             }
+
+            auto senderAddress = arpData.senderProtocolAddress();
+            if (senderAddress.size() != suika::ether::IP_ADDR_LEN) {
+                throw std::runtime_error(std::format("not support protocol address size = {}", senderAddress.size()));
+            }
+            uint32_t senderProtocolAddress =
+                    static_cast<uint32_t>(senderAddress[0]) << 24 |
+                    static_cast<uint32_t>(senderAddress[1]) << 16 |
+                    static_cast<uint32_t>(senderAddress[2]) << 8 |
+                    static_cast<uint32_t>(senderAddress[3]);
+            auto c = suika::protocol::arp::CacheData {
+                senderProtocolAddress,
+                arpData.senderHardwareAddress(),
+            };
+            suika::protocol::arp::arpCache.create(c);
 
             if (arpData.operationCode() == suika::protocol::arp::OP_REQUEST) {
                 suika::protocol::arp::reply(ipInterface, arpData);

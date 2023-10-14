@@ -27,6 +27,8 @@ add_executable(suika main.cpp
         IpUtils.h
         Icmp.cpp
         Icmp.h
-        IcmpData.h)
+        IcmpData.h
+        RouteTable.h
+        ArpCache.h)
 
 add_executable(test test.cpp)

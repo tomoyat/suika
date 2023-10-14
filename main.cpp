@@ -6,6 +6,7 @@
 #include "IpNetworkInterface.h"
 #include "Ipv4.h"
 #include "Icmp.h"
+#include "RouteTable.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -13,6 +14,7 @@ constexpr char tun_device[] = "/dev/net/tun";
 constexpr char user[] = "root";
 constexpr char tun_device_name[] = "suika_device";
 constexpr char tun_ip_range[] = "192.0.2.1/24";
+const std::uint32_t tun_ip = suika::ipUtils::Ipv4strToUint32("192.0.2.1");
 
 void setupTunDevice() {
     suika::util::exec(std::format("ip tuntap add mode tap user {} name {}", user, tun_device_name));
@@ -64,7 +66,14 @@ int main() {
     ipInterfacePtr->registerDevice(etherDevicePtr);
     etherDevicePtr->addNetworkInterface(ipInterfacePtr);
 
-    suika::protocol::ipv4::ipNetworkInterfaceList.push_back(ipInterfacePtr);
+    suika::routeTable::routeTable.add(
+            suika::routeTable::Route{
+                    suika::protocol::ipv4::IP_ADDR_ANY,
+                    suika::protocol::ipv4::IP_ADDR_ANY,
+                    tun_ip,
+                    ipInterfacePtr
+            }
+    );
 
     suika::logger::info(
             std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
