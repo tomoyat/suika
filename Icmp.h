@@ -11,6 +11,12 @@ namespace suika::protocol::icmp {
     struct IcmpHandler : suika::protocol::ipv4::ProtocolHandler {
         int handle(std::shared_ptr<suika::protocol::ipv4::Ipv4ProtocolData> protocolDataPtr) override;
     };
+
+    int sendIcmp(
+            std::uint16_t identifier,
+            std::uint16_t sequenceNumber,
+            std::uint32_t dst,
+            const std::shared_ptr<suika::network::IpNetworkInterface> &ipNetworkInterfacePtr);
 }
 
 

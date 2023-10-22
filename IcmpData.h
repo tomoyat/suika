@@ -42,6 +42,7 @@ namespace suika::protocol::icmp {
 
     struct IcmpDataEcho : IcmpData {
         explicit IcmpDataEcho(const std::vector<std::uint8_t> &data_) : IcmpData(data_) {}
+        explicit IcmpDataEcho() : IcmpData(8) {}
 
         [[nodiscard]] std::uint16_t identifier() const {
             return readUint16(4);

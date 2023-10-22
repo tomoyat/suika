@@ -87,6 +87,11 @@ int main() {
     intr.run();
     suika::logger::info("wait 60 sec ");
 
+    for (int i = 0; i < 10; i++) {
+        suika::protocol::icmp::sendIcmp(1, i, tun_ip, ipInterfacePtr);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
     std::this_thread::sleep_for(std::chrono::milliseconds(60000));
 
     intr.shutdown();

@@ -34,12 +34,6 @@ namespace suika::protocol::arp {
         data.setTargetHardwareAddress(requestData.senderHardwareAddress());
         data.setTargetProtocolAddress(requestData.senderProtocolAddress());
 
-        // std::vector<std::uint8_t> d(data.data.size());
-        // for (int idx = 0; auto &v :data.data) {
-        //     d[idx] = static_cast<std::uint8_t>(v);
-        //     idx++;
-        // }
-
         suika::logger::info("reply arp data -----");
         arpDump(data);
 
@@ -49,6 +43,7 @@ namespace suika::protocol::arp {
 
     int ArpProtocolHandler::handle(std::shared_ptr<suika::protocol::ProtocolData> protocolData) {
         ArpData arpData{protocolData};
+
 
         arpDump(arpData);
 
@@ -76,7 +71,8 @@ namespace suika::protocol::arp {
                     static_cast<uint32_t>(address[1]) << 16 |
                     static_cast<uint32_t>(address[2]) << 8 |
                     static_cast<uint32_t>(address[3]);
-            suika::logger::info(std::format("unicast = {}, target = {}", ipInterface->unicast, targetProtocolAddress));
+            suika::logger::info(std::format("unicast = {}, target = {}",
+                                            ipUtils::Uint32ToIpv4str(ipInterface->unicast), ipUtils::Uint32ToIpv4str(targetProtocolAddress)));
             if (targetProtocolAddress != ipInterface->unicast) {
                 throw std::runtime_error(std::format("not support protocol address size = {}", address.size()));
             }
