@@ -56,6 +56,8 @@ namespace suika::device::ether {
 
         std::vector<std::uint8_t> getAddress() override;
 
+        std::vector<std::uint8_t> broadcastAddress() override;
+
         std::shared_ptr<suika::device::Device> getSelfPtr() override;
 
         int transmit(const std::vector<uint8_t> &data, const std::vector<std::uint8_t> &dst, std::uint16_t type) override;

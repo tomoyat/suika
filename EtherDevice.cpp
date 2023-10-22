@@ -178,4 +178,8 @@ namespace suika::device::ether {
         }
         return ar;
     }
+
+    std::vector<std::uint8_t> EtherDevice::broadcastAddress() {
+        return std::vector<std::uint8_t>{0xff, 0xff,0xff, 0xff, 0xff, 0xff};
+    }
 }

@@ -3,6 +3,7 @@
 #include "EtherDevice.h"
 #include "IpNetworkInterface.h"
 #include "ArpCache.h"
+#include "Error.h"
 
 namespace suika::protocol::arp {
     std::string macAddressToString(const std::vector<uint8_t> &addr) {
@@ -33,16 +34,16 @@ namespace suika::protocol::arp {
         data.setTargetHardwareAddress(requestData.senderHardwareAddress());
         data.setTargetProtocolAddress(requestData.senderProtocolAddress());
 
-        std::vector<std::uint8_t> d(data.data.size());
-        for (int idx = 0; auto &v :data.data) {
-            d[idx] = static_cast<std::uint8_t>(v);
-            idx++;
-        }
+        // std::vector<std::uint8_t> d(data.data.size());
+        // for (int idx = 0; auto &v :data.data) {
+        //     d[idx] = static_cast<std::uint8_t>(v);
+        //     idx++;
+        // }
 
         suika::logger::info("reply arp data -----");
         arpDump(data);
 
-        interface->devicePtr->transmit(d, requestData.senderHardwareAddress(), suika::protocol::arpType);
+        interface->devicePtr->transmit(data.data, requestData.senderHardwareAddress(), suika::protocol::arpType);
         return 0;
     }
 
@@ -101,6 +102,34 @@ namespace suika::protocol::arp {
         } else {
             throw std::runtime_error("cast error");
         }
+        return 0;
+    }
+
+    std::vector<std::uint8_t> arpResolve(std::shared_ptr<suika::network::IpNetworkInterface> interface, std::uint32_t ip) {
+        if (auto c = suika::protocol::arp::arpCache.select(ip)) {
+            return c.value().hardwareAddress;
+        }
+        arpRequest(interface, ip);
+        throw suika::error::ArpResolveException("not find arp cache. call arp reqest");
+    }
+
+    int arpRequest(std::shared_ptr<suika::network::IpNetworkInterface> interface, std::uint32_t ip) {
+        auto data = arpDataFactory(
+                suika::protocol::arp::ARP_HARDWARE_TYPE_ETHER,
+                suika::protocol::arp::ARP_PROTOCOL_TYPE_IP,
+                suika::protocol::arp::ETHER_ADDRESS_LEN,
+                suika::protocol::arp::IP_ADDRESS_LEN,
+                suika::protocol::arp::OP_REQUEST
+        );
+        data.setSenderHardwareAddress(interface->devicePtr->getAddress());
+        data.setSenderProtocolAddress(interface->getUnicastVector());
+        data.setTargetHardwareAddress(std::vector<std::uint8_t>(suika::protocol::arp::ETHER_ADDRESS_LEN, 0));
+        data.setTargetProtocolAddress(ipUtils::Uint32ToVector(ip));
+
+        suika::logger::info("--- arp request: ---");
+        arpDump(data);
+
+        interface->devicePtr->transmit(data.data, interface->devicePtr->broadcastAddress(), suika::protocol::arpType);
         return 0;
     }
 

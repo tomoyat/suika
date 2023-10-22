@@ -30,6 +30,15 @@ namespace suika::ipUtils {
                            (addr >> 8) & 255, addr & 255);
     }
 
+    inline std::vector<std::uint8_t> Uint32ToVector(std::uint32_t addr) {
+        return std::vector<std::uint8_t>{
+            static_cast<std::uint8_t>(addr >> 24),
+            static_cast<std::uint8_t>(addr >> 16),
+            static_cast<std::uint8_t>(addr >> 8),
+            static_cast<std::uint8_t>(addr),
+        };
+    };
+
     inline std::uint16_t calculateChecksum(const std::vector<std::uint8_t> &data, int begin, int end) {
         std::uint32_t sum = 0;
         for (int i = begin; i < end && i < data.size(); i+=2) {

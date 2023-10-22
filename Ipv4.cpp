@@ -6,6 +6,8 @@
 #include "RouteTable.h"
 #include "ArpCache.h"
 #include "Protocol.h"
+#include "Error.h"
+#include "Arp.h"
 
 namespace suika::protocol::ipv4 {
     int Ipv4ProtocolHandler::handle(
@@ -70,7 +72,6 @@ namespace suika::protocol::ipv4 {
             throw std::runtime_error("src is required");
         }
 
-
         auto route = suika::routeTable::routeTable.lookup(dst);
 
         if (src != IP_ADDR_ANY && src != route.interface->unicast) {
@@ -111,12 +112,11 @@ namespace suika::protocol::ipv4 {
 
 
         // ARP cacheの探索をして、interfaceのetherを叩く
-        if (auto c = suika::protocol::arp::arpCache.select(gateway)) {
-            auto target = c.value().hardwareAddress;
-            route.interface->devicePtr->transmit(ipv4Packet.data, target, suika::protocol::ipType);
-        } else {
-            // Todo Arp Request
-            throw std::runtime_error("arp request not impl");
+        try {
+            auto hardwareAddr = suika::protocol::arp::arpResolve(route.interface, gateway);
+            route.interface->devicePtr->transmit(ipv4Packet.data, hardwareAddr, suika::protocol::ipType);
+        } catch (suika::error::ArpResolveException &e) {
+            throw e;
         }
         return 0;
     }

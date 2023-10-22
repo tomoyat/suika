@@ -27,6 +27,8 @@ namespace suika::device {
 
         virtual std::vector<std::uint8_t> getAddress() = 0;
 
+        virtual std::vector<std::uint8_t> broadcastAddress() = 0;
+
         virtual int transmit(const std::vector<uint8_t> &data, const std::vector<std::uint8_t> &dst,
                              std::uint16_t type) = 0;
 
