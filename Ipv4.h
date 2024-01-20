@@ -9,6 +9,7 @@ namespace suika::protocol::ipv4 {
     constexpr uint8_t IP_VERSION_IPV4 = 4;
 
     constexpr uint8_t ICMP_TYPE = 0x01;
+    constexpr uint8_t UDP_TYPE = 0x11;
 
     constexpr uint32_t IP_ADDR_ANY = 0x00000000; /* 0.0.0.0 */
     constexpr uint32_t IP_ADDR_BROADCAST = 0xffffffff; /* 255.255.255.255 */
@@ -37,6 +38,11 @@ namespace suika::protocol::ipv4 {
     int ipv4_output(std::uint8_t protocol, const std::vector<std::uint8_t> &data, std::uint32_t src, std::uint32_t dst);
 
     std::uint16_t ip_gen_id(void);
+
+    struct IpEndpoint {
+        std::uint32_t addr;
+        std::uint16_t port;
+    };
 }
 
 #endif //SUIKA_IPV4_H

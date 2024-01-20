@@ -7,6 +7,7 @@
 #include <charconv>
 #include <format>
 #include <cstdint>
+#include <vector>
 
 namespace suika::ipUtils {
     inline uint32_t Ipv4strToUint32(const std::string &str) {
@@ -43,6 +44,14 @@ namespace suika::ipUtils {
         std::uint32_t sum = 0;
         for (int i = begin; i < end && i < data.size(); i+=2) {
             sum += static_cast<std::uint32_t>(data[i]) << 8 | static_cast<std::uint32_t>(data[i+1]);
+        }
+        return static_cast<std::uint16_t>((sum + (sum >> 16)) & 0x0000FFFF);
+    }
+
+    inline std::uint16_t calculateChecksumUint16(const std::vector<std::uint16_t> &data, int begin, int end) {
+        std::uint32_t sum = 0;
+        for (int i = begin; i < end && i < data.size(); i+=1) {
+            sum += static_cast<std::uint32_t>(data[i]);
         }
         return static_cast<std::uint16_t>((sum + (sum >> 16)) & 0x0000FFFF);
     }

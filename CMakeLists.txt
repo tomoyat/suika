@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(suika)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 add_executable(suika main.cpp
         Logger.h
@@ -30,6 +30,12 @@ add_executable(suika main.cpp
         IcmpData.h
         RouteTable.h
         ArpCache.h
-        Error.h)
+        Error.h
+        Udp.h
+        Udp.cpp
+        UdpData.h
+        UdpControlBlock.h
+        UdpControlBlock.h
+        UdpControlBlock.cpp)
 
 add_executable(test test.cpp)

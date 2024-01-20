@@ -7,6 +7,7 @@
 #include "Ipv4.h"
 #include "Icmp.h"
 #include "RouteTable.h"
+#include "Udp.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -24,23 +25,27 @@ void setupTunDevice() {
 
 void protocolQueueInit() {
     suika::protocol::protocolQueues.insert(
-            std::make_pair(suika::protocol::arpType,
-                           std::queue<std::shared_ptr<suika::protocol::ProtocolData>>())
+        std::make_pair(suika::protocol::arpType,
+                       std::queue<std::shared_ptr<suika::protocol::ProtocolData> >())
     );
-    suika::protocol::protocolHandlers[suika::protocol::arpType] = std::make_shared<suika::protocol::arp::ArpProtocolHandler>();
+    suika::protocol::protocolHandlers[suika::protocol::arpType] = std::make_shared<
+        suika::protocol::arp::ArpProtocolHandler>();
 
     suika::protocol::protocolQueues.insert(
-            std::make_pair(
-                    suika::protocol::ipType,
-                    std::queue<std::shared_ptr<suika::protocol::ProtocolData>>()
-            )
+        std::make_pair(
+            suika::protocol::ipType,
+            std::queue<std::shared_ptr<suika::protocol::ProtocolData> >()
+        )
     );
-    suika::protocol::protocolHandlers[suika::protocol::ipType] = std::make_shared<suika::protocol::ipv4::Ipv4ProtocolHandler>();
+    suika::protocol::protocolHandlers[suika::protocol::ipType] = std::make_shared<
+        suika::protocol::ipv4::Ipv4ProtocolHandler>();
 };
 
 void ipProtocolInit() {
     suika::protocol::ipv4::protocolHandlers[suika::protocol::ipv4::ICMP_TYPE] =
             std::make_shared<suika::protocol::icmp::IcmpHandler>();
+    suika::protocol::ipv4::protocolHandlers[suika::protocol::ipv4::UDP_TYPE] =
+            std::make_shared<suika::protocol::udp::UdpHandler>();
 }
 
 int main() {
@@ -51,7 +56,7 @@ int main() {
 
     std::shared_ptr<suika::device::ether::EtherDevice> etherDevicePtr =
             std::make_shared<suika::device::ether::EtherDevice>(
-                    std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
+                std::string{tun_device}, std::string{tun_device_name}, "00:00:5e:00:53:01");
     etherDevicePtr->open();
 
     std::array<std::uint8_t, suika::ether::ETHER_ADDR_LEN> address{};
@@ -59,24 +64,24 @@ int main() {
     etherDevicePtr->setSelfPtr(etherDevicePtr);
 
     auto ipInterfacePtr = std::make_shared<suika::network::IpNetworkInterface>(
-            suika::network::INTERFACE_FAMILY_IP,
-            "192.0.2.2",
-            "255.255.255.0"
+        suika::network::INTERFACE_FAMILY_IP,
+        "192.0.2.2",
+        "255.255.255.0"
     );
     ipInterfacePtr->registerDevice(etherDevicePtr);
     etherDevicePtr->addNetworkInterface(ipInterfacePtr);
 
     suika::routeTable::routeTable.add(
-            suika::routeTable::Route{
-                    suika::protocol::ipv4::IP_ADDR_ANY,
-                    suika::protocol::ipv4::IP_ADDR_ANY,
-                    tun_ip,
-                    ipInterfacePtr
-            }
+        suika::routeTable::Route{
+            suika::protocol::ipv4::IP_ADDR_ANY,
+            suika::protocol::ipv4::IP_ADDR_ANY,
+            tun_ip,
+            ipInterfacePtr
+        }
     );
 
     suika::logger::info(
-            std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
+        std::format("ether device address : {}", suika::device::ether::addressToString(etherDevicePtr->address)));
 
     suika::logger::info(std::format("ip interface : {}", ipInterfacePtr->info()));
     auto intr = suika::interrupt::Interrupt();
@@ -87,9 +92,42 @@ int main() {
     intr.run();
     suika::logger::info("wait 60 sec ");
 
-    for (int i = 0; i < 10; i++) {
-        suika::protocol::icmp::sendIcmp(1, i, tun_ip, ipInterfacePtr);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    auto sock = suika::protocol::udp::UdpSocket::open();
+    if (!sock.has_value()) {
+        throw std::runtime_error("socket error");
+    }
+    auto s = sock.value();
+    s.bind("192.0.2.2", 5555);
+
+    for (int i = 0; i < 1000; i++) {
+
+         try {
+             std::vector<std::uint8_t> buffer(10000, 0);
+             std::uint32_t srcIp;
+             std::uint16_t srcPort;
+             auto len = s.recvFrom(buffer, srcIp, srcPort);
+             buffer.resize(len);
+
+             suika::logger::info(std::format("resize buffer size = {}", buffer.size()));
+
+             std::string str;
+             for (int i = 0; i < len; i++) {
+                 str += (char)buffer[i];
+             }
+
+             suika::logger::info(std::format("UDP INPUT: ip = {}, port = {}, payload = {}", suika::ipUtils::Uint32ToIpv4str(srcIp), srcPort,
+                 str
+                 ));
+
+             s.sendTo(buffer, suika::ipUtils::Uint32ToIpv4str(srcIp), srcPort);
+
+             //sock.value().sendTo(std::vector<std::uint8_t>{48, 49, 50, 10}, "192.168.65.254", 7878);
+             // sock.value().sendTo(std::vector<std::uint8_t>{48, 49, 50, 10}, "192.0.2.1", 5555);
+         } catch (const std::runtime_error &e) {
+             suika::logger::error(std::format("fail send to. {}", e.what()));
+         }
+        //suika::protocol::icmp::sendIcmp(1, i, tun_ip, ipInterfacePtr);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(60000));

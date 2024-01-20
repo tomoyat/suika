@@ -8,7 +8,7 @@ struct BinaryPayload {
     // 数値はビッグエンディアンで格納されている
     std::vector<std::uint8_t> data;
 protected:
-    std::uint8_t readUint8(int offset) const {
+    [[nodiscard]] std::uint8_t readUint8(int offset) const {
         return data[offset];
     }
 
