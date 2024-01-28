@@ -12,3 +12,6 @@ RUN apt-get update \
     sudo \
  && apt-get -y clean \
  && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /tmp/suika-build
+WORKDIR /tmp/suika-build
