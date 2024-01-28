@@ -1,13 +1,14 @@
-#include "Logger.h"
-#include "Util.h"
-#include "EtherDevice.h"
-#include "Interrupt.h"
-#include "Arp.h"
-#include "IpNetworkInterface.h"
-#include "Ipv4.h"
-#include "Icmp.h"
-#include "RouteTable.h"
-#include "Udp.h"
+#include "lib/Logger.h"
+#include "lib/Util.h"
+#include "lib/EtherDevice.h"
+#include "lib/Interrupt.h"
+#include "lib/IpUtils.h"
+#include "lib/Arp.h"
+#include "lib/IpNetworkInterface.h"
+#include "lib/Ipv4.h"
+#include "lib/Icmp.h"
+#include "lib/RouteTable.h"
+#include "lib/Udp.h"
 #include <chrono>
 
 constexpr char tun_device[] = "/dev/net/tun";
@@ -121,13 +122,9 @@ int main() {
 
              s.sendTo(buffer, suika::ipUtils::Uint32ToIpv4str(srcIp), srcPort);
 
-             //sock.value().sendTo(std::vector<std::uint8_t>{48, 49, 50, 10}, "192.168.65.254", 7878);
-             // sock.value().sendTo(std::vector<std::uint8_t>{48, 49, 50, 10}, "192.0.2.1", 5555);
          } catch (const std::runtime_error &e) {
              suika::logger::error(std::format("fail send to. {}", e.what()));
          }
-        //suika::protocol::icmp::sendIcmp(1, i, tun_ip, ipInterfacePtr);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(60000));

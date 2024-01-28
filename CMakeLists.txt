@@ -3,39 +3,7 @@ project(suika)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(suika main.cpp
-        Logger.h
-        Util.h
-        Util.h
-        EtherDevice.h
-        EtherDevice.cpp
-        Logger.cpp
-        Util.cpp
-        Interrupt.h
-        Protocol.h
-        Arp.h
-        Arp.cpp
-        NetworkInterface.h
-        IpNetworkInterface.h
-        IpNetworkInterface.cpp
-        ArpData.h
-        EtherFrame.h
-        BinaryPayload.h
-        Ipv4.h
-        Ipv4.cpp
-        Ipv4Data.h
-        IpUtils.h
-        Icmp.cpp
-        Icmp.h
-        IcmpData.h
-        RouteTable.h
-        ArpCache.h
-        Error.h
-        Udp.h
-        Udp.cpp
-        UdpData.h
-        UdpControlBlock.h
-        UdpControlBlock.h
-        UdpControlBlock.cpp)
+add_subdirectory(lib)
 
-add_executable(test test.cpp)
+add_executable(suika main.cpp)
+target_link_libraries(suika lib)
