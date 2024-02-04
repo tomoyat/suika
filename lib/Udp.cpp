@@ -50,6 +50,15 @@ namespace suika::protocol::udp {
         return 0;
     }
 
+    int UdpEventHandler::handle() {
+        auto udpPcbMgr = pcb::UdpPcbManager::getInstance();
+        suika::logger::info("handle interrupted on udp");
+        std::lock_guard<std::mutex>(udpPcbMgr->mutex);
+        udpPcbMgr->interruptAll();
+        return 0;
+    }
+
+
     UdpSocket::UdpSocket(const int id_, const int pcbId_)
         : id(id_), pcbId(pcbId_) {
     }
@@ -128,7 +137,11 @@ namespace suika::protocol::udp {
         lck.unlock();
 
         std::unique_lock<std::mutex> lc(pcb.mutex);
-        pcb.cv.wait(lc, [&] { return !pcb.que.empty(); });
+        pcb.cv.wait(lc, [&] { return !pcb.que.empty() || pcb.interrupted == 1; });
+        suika::logger::info("wake up udp recv from");
+        if (pcb.interrupted == 1) {
+            return -1;
+        }
         auto &payload = pcb.que.front();
         std::copy(payload.data.begin(), payload.data.end(), buf.begin());
         pcb.que.pop();

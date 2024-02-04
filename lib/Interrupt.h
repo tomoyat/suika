@@ -8,18 +8,17 @@
 #include <vector>
 #include "Logger.h"
 #include "EtherDevice.h"
+#include "Ipv4.h"
 #include "Protocol.h"
 
 namespace suika::interrupt {
-
     struct Interrupt {
-
         std::thread::id tid;
         pthread_barrier_t barrier;
         sigset_t sigmask;
         std::unique_ptr<std::thread> interruptThreadPtr;
 
-        std::vector<std::shared_ptr<suika::device::Device>> inputDevices{};
+        std::vector<std::shared_ptr<suika::device::Device> > inputDevices{};
 
         Interrupt() {
             tid = std::this_thread::get_id();
@@ -30,6 +29,7 @@ namespace suika::interrupt {
             sigemptyset(&sigmask);
             sigaddset(&sigmask, SIGHUP);
             sigaddset(&sigmask, SIGUSR1);
+            sigaddset(&sigmask, SIGUSR2);
         }
 
         void addDevice(const std::shared_ptr<suika::device::Device> &p) {
@@ -44,7 +44,7 @@ namespace suika::interrupt {
 
             suika::logger::info("run interrupt handle thread.");
             suika::logger::info("registered devices:");
-            for (const auto& p : inputDevices) {
+            for (const auto &p: inputDevices) {
                 suika::logger::info(std::format("- {}", p->getInfo()));
             }
 
@@ -88,6 +88,10 @@ namespace suika::interrupt {
                         suika::logger::info("receive SIGUSR1");
                         handleProtocolSignal();
                         break;
+                    case SIGUSR2:
+                        suika::logger::info("receive SIGUSR2");
+                        handleEventSignal();
+                        break;
                     default:
                         suika::logger::info(std::format("signal = {}", sig));
                         handleSignal(sig);
@@ -111,8 +115,15 @@ namespace suika::interrupt {
             }
         }
 
+        int handleEventSignal() {
+            for (auto& e : suika::protocol::ipv4::eventHandlers) {
+                e->handle();
+            }
+            return 0;
+        }
+
         void handleSignal(int sig) {
-            for (const auto& d : inputDevices) {
+            for (const auto &d: inputDevices) {
                 if (d->getIrq() == sig) {
                     suika::logger::info(std::format("device found. process payload. device = {}", d->getInfo()));
                     d->handler(interruptThreadPtr->native_handle());

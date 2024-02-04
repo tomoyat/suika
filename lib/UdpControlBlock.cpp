@@ -38,6 +38,17 @@ namespace suika::protocol::udp::pcb {
         return std::unexpected{-1};
     }
 
+    int UdpPcbManager::interruptAll() {
+        for (UdpControlBlock &elm : udpPcbList) {
+            if (elm.state == UdpControlBlockState::OPEN) {
+                std::lock_guard<std::mutex>(elm.mutex);
+                elm.interrupted = 1;
+                elm.cv.notify_all();
+            }
+        }
+        return 0;
+    }
+
     UdpPcbManager *UdpPcbManager::getInstance() {
         static UdpPcbManager instance;
         return &instance;

@@ -32,8 +32,13 @@ namespace suika::protocol::ipv4 {
 
         virtual ~ProtocolHandler() = default;
     };
-
     inline std::map<std::uint8_t, std::shared_ptr<ProtocolHandler> > protocolHandlers;
+
+    struct EventHandler {
+        virtual int handle() = 0;
+        virtual ~EventHandler() = default;
+    };
+    inline std::vector<std::shared_ptr<EventHandler> > eventHandlers;
 
     int ipv4_output(std::uint8_t protocol, const std::vector<std::uint8_t> &data, std::uint32_t src, std::uint32_t dst);
 

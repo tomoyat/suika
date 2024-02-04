@@ -14,6 +14,10 @@ namespace suika::protocol::udp {
         int handle(std::shared_ptr<suika::protocol::ipv4::Ipv4ProtocolData> protocolDataPtr) override;
     };
 
+    struct UdpEventHandler : suika::protocol::ipv4::EventHandler {
+        int handle() override;
+    };
+
     /* see https://tools.ietf.org/html/rfc6335 */
     constexpr std::uint16_t SOURCE_PORT_MIN = 39584;
     constexpr std::uint16_t SOURCE_PORT_MAX = 65535;

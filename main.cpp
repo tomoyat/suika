@@ -18,6 +18,13 @@ constexpr char tun_device_name[] = "suika_device";
 constexpr char tun_ip_range[] = "192.0.2.1/24";
 const std::uint32_t tun_ip = suika::ipUtils::Ipv4strToUint32("192.0.2.1");
 
+static volatile sig_atomic_t terminate = 0;
+
+void on_signal(int s) {
+    terminate = 1;
+    kill(getpid(), SIGUSR2);
+}
+
 void setupTunDevice() {
     suika::util::exec(std::format("ip tuntap add mode tap user {} name {}", user, tun_device_name));
     suika::util::exec(std::format("ip addr add {} dev {}", tun_ip_range, tun_device_name));
@@ -40,6 +47,10 @@ void protocolQueueInit() {
     );
     suika::protocol::protocolHandlers[suika::protocol::ipType] = std::make_shared<
         suika::protocol::ipv4::Ipv4ProtocolHandler>();
+
+    suika::protocol::ipv4::eventHandlers.push_back(
+        std::make_shared<suika::protocol::udp::UdpEventHandler>());
+
 };
 
 void ipProtocolInit() {
@@ -50,6 +61,10 @@ void ipProtocolInit() {
 }
 
 int main() {
+
+    signal(SIGINT, on_signal);
+    signal(SIGTERM, on_signal);
+
     setupTunDevice();
 
     protocolQueueInit();
@@ -100,13 +115,16 @@ int main() {
     auto s = sock.value();
     s.bind("192.0.2.2", 5555);
 
-    for (int i = 0; i < 1000; i++) {
-
+    while (!terminate) {
          try {
              std::vector<std::uint8_t> buffer(10000, 0);
              std::uint32_t srcIp;
              std::uint16_t srcPort;
              auto len = s.recvFrom(buffer, srcIp, srcPort);
+
+             if (len == -1) {
+                 continue;
+             }
              buffer.resize(len);
 
              suika::logger::info(std::format("resize buffer size = {}", buffer.size()));
@@ -126,8 +144,7 @@ int main() {
              suika::logger::error(std::format("fail send to. {}", e.what()));
          }
     }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+    suika::logger::info("start finish");
 
     intr.shutdown();
     return 0;

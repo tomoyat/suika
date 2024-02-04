@@ -34,8 +34,9 @@ namespace suika::protocol::udp::pcb {
         ipv4::IpEndpoint endpoint;
         std::mutex mutex;
         std::condition_variable cv;
+        int interrupted;
 
-        UdpControlBlock() : id(-1), state(UdpControlBlockState::FREE) {
+        UdpControlBlock() : id(-1), interrupted(0), state(UdpControlBlockState::FREE) {
         }
 
         UdpControlBlock(const UdpControlBlock &) = delete;
@@ -63,6 +64,8 @@ namespace suika::protocol::udp::pcb {
 
         std::expected<std::reference_wrapper<UdpControlBlock>, int> select(
             std::uint32_t ipv4, std::uint16_t port);
+
+        int interruptAll();
 
         static UdpPcbManager *getInstance();
     };
