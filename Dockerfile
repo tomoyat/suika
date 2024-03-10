@@ -1,4 +1,4 @@
-FROM gcc:13.2
+FROM gcc:13.2 as base
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -15,3 +15,7 @@ RUN apt-get update \
 
 RUN mkdir -p /tmp/suika-build
 WORKDIR /tmp/suika-build
+
+FROM base as test
+
+COPY . /app
